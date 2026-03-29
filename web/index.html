@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A guided walking tour of Bruff town's most historic heritage sites in Co. Limerick, Ireland.">
+  <meta name="theme-color" content="#c8922a">
+  <title>Bruff Heritage Trail</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+  <main class="page-container">
+    <header class="app-header">
+      <div class="app-logo" aria-hidden="true">&#127963;</div>
+      <h1 class="app-title">Bruff Heritage Trail</h1>
+      <p class="app-subtitle">Co. Limerick, Ireland</p>
+    </header>
+
+    <div class="stats-bar" aria-label="Tour summary">
+      <div class="stat-box">
+        <div class="stat-value">90</div>
+        <div class="stat-label">Minutes</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">4</div>
+        <div class="stat-label">Locations</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">Easy</div>
+        <div class="stat-label">Difficulty</div>
+      </div>
+    </div>
+
+    <p class="section-title">Tour Highlights</p>
+    <ul class="highlight-list">
+      <li class="highlight-item">
+        <div class="highlight-num" aria-hidden="true">1</div>
+        <div>
+          <div class="highlight-name">Thomas Fitzgerald Centre</div>
+          <div class="highlight-desc">JFK family heritage &amp; former courthouse, 1926</div>
+        </div>
+      </li>
+      <li class="highlight-item">
+        <div class="highlight-num" aria-hidden="true">2</div>
+        <div>
+          <div class="highlight-name">Saints Peter &amp; Paul Church</div>
+          <div class="highlight-desc">Gothic Revival, built 1828&ndash;1833</div>
+        </div>
+      </li>
+      <li class="highlight-item">
+        <div class="highlight-num" aria-hidden="true">3</div>
+        <div>
+          <div class="highlight-name">Sean Wall Monument</div>
+          <div class="highlight-desc">Portland stone memorial, unveiled 1952</div>
+        </div>
+      </li>
+      <li class="highlight-item">
+        <div class="highlight-num" aria-hidden="true">4</div>
+        <div>
+          <div class="highlight-name">Bruff GAA Grounds</div>
+          <div class="highlight-desc">One of Ireland&rsquo;s oldest GAA clubs, founded 1887</div>
+        </div>
+      </li>
+    </ul>
+
+    <p class="section-title" style="margin-top:20px;">Getting Started</p>
+    <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:4px;">
+      Allow location access when prompted to receive walking directions and
+      proximity alerts as you approach each site.
+    </p>
+    <p style="font-size:0.78rem;color:var(--color-text-muted);margin-bottom:0;">
+      Works offline once loaded &mdash; map tiles are cached for use without signal.
+    </p>
+
+    <a href="tour.html" class="cta-btn" id="start-btn">
+      Begin Your Bruff Heritage Adventure
+    </a>
+  </main>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+    // Clear any previous session so the tour always starts fresh from the intro
+    document.getElementById('start-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('bruff_tour_state');
+    });
+  </script>
+</body>
+</html>

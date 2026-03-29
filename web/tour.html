@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1208">
+  <title>Bruff Heritage Trail &mdash; Map</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/tour.css">
+  <!-- Leaflet CSS (also cached by service worker for offline use) -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
+</head>
+<body>
+  <div id="map" role="application" aria-label="Walking tour map"></div>
+
+  <!-- Outside-boundary warning (hidden by default) -->
+  <div id="boundary-warning" role="alert" hidden>
+    Head back to Bruff town centre
+  </div>
+
+  <!-- Waypoint arrival banner (hidden by default) -->
+  <div id="arrival-banner" role="alert" hidden>
+    <a id="arrival-link" href="#">You&rsquo;ve arrived &mdash; tap to explore</a>
+  </div>
+
+  <!-- Home button — top-left corner -->
+  <a href="index.html" id="home-btn" aria-label="Back to home">&larr; Home</a>
+
+  <!-- Bottom navigation panel -->
+  <div id="nav-panel">
+    <div id="navigation-instruction">Locating you&hellip;</div>
+    <div id="distance-info"></div>
+  </div>
+
+  <!-- Leaflet JS (also cached by service worker for offline use) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+  <script type="module">
+    import { initTourPage } from './js/app.js';
+    initTourPage();
+  </script>
+</body>
+</html>

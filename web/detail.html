@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1208">
+  <title>Bruff Heritage Trail</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/detail.css">
+</head>
+<body>
+  <div class="detail-page">
+    <a href="tour.html" class="detail-back">&larr; Back to map</a>
+
+    <img id="waypoint-image"
+         class="detail-image"
+         src="assets/images/placeholder.jpg"
+         alt=""
+         loading="lazy">
+
+    <div class="detail-content">
+      <h1 id="waypoint-name" class="detail-name"></h1>
+      <p id="waypoint-description" class="detail-description"></p>
+
+      <p class="detail-history-title">Historical Background</p>
+      <p id="waypoint-history" class="detail-history"></p>
+    </div>
+  </div>
+
+  <div class="detail-cta">
+    <button id="continue-btn">Continue Your Bruff Journey &rarr;</button>
+  </div>
+
+  <script type="module">
+    import { initDetailPage } from './js/app.js';
+    initDetailPage();
+  </script>
+</body>
+</html>

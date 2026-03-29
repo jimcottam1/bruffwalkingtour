@@ -1,0 +1,140 @@
+/* Styles for tour.html (full-screen map page) */
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#map {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Bottom navigation panel */
+#nav-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--color-nav-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(200, 146, 42, 0.3);
+}
+
+#navigation-instruction {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+#distance-info {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* Home / exit button — top-left corner */
+#home-btn {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 12px;
+  z-index: 1050;
+  background: var(--color-nav-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(200, 146, 42, 0.35);
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Boundary warning — top of screen */
+#boundary-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  background: var(--color-warning);
+  color: #fff;
+  text-align: center;
+  padding: 10px 16px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Arrival notification banner */
+#arrival-banner {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 1100;
+  background: var(--color-success);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: slideDown 0.3s ease;
+}
+
+#arrival-link {
+  display: block;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: underline;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* Waypoint marker divIcons (rendered in Leaflet) */
+.waypoint-marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-family: var(--font);
+}
+
+.marker-current {
+  background: var(--color-primary);
+  color: #1a1208;
+  border-color: #fff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.marker-future {
+  background: rgba(200, 146, 42, 0.35);
+  color: var(--color-text);
+}
+
+.marker-visited {
+  background: var(--color-success);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes pulse {
+  0%,  100% { box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 0   rgba(200,146,42,0.5); }
+  50%        { box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 12px rgba(200,146,42,0); }
+}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#c8922a">
+  <title>Tour Complete &mdash; Bruff Heritage Trail</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+  <main class="page-container">
+    <div class="completion-hero">
+      <div class="completion-icon" aria-hidden="true">&#127942;</div>
+      <h1 class="completion-title">Tour Complete!</h1>
+      <p class="completion-sub">
+        You&rsquo;ve explored all 4 heritage sites of Bruff, Co. Limerick.
+      </p>
+    </div>
+
+    <div class="stats-bar" aria-label="Tour summary">
+      <div class="stat-box">
+        <div class="stat-value">4</div>
+        <div class="stat-label">Sites visited</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">90</div>
+        <div class="stat-label">Minutes</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">135+</div>
+        <div class="stat-label">Years of history</div>
+      </div>
+    </div>
+
+    <p class="section-title">You discovered</p>
+    <ul id="visited-list" aria-label="Visited heritage sites"></ul>
+
+    <!-- Share button — shown only if Web Share API is available (set in app.js) -->
+    <button id="share-btn" class="cta-btn" hidden>Share Your Achievement</button>
+    <button id="restart-btn" class="cta-btn cta-btn-secondary">Take Tour Again</button>
+  </main>
+
+  <script type="module">
+    import { initCompletePage } from './js/app.js';
+    initCompletePage();
+  </script>
+</body>
+</html>
