@@ -1,0 +1,27 @@
+# Android build outputs
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Node / web tooling
+web/node_modules/
+web/.env
+
+# Gradle wrapper jar (keep gradlew scripts, ignore the jar itself)
+!gradle/wrapper/gradle-wrapper.jar
+
+# Windows reserved device name accidentally created
+nul
+
+# Claude Code private settings
+.claude/

@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Blue circle background -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M12,12 m-12,0 a12,12 0,1 1,24 0 a12,12 0,1 1,-24 0"/>
+    
+    <!-- White border -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,12 m-10,0 a10,10 0,1 1,20 0 a10,10 0,1 1,-20 0"/>
+    
+    <!-- Blue inner circle -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M12,12 m-8,0 a8,8 0,1 1,16 0 a8,8 0,1 1,-16 0"/>
+    
+    <!-- White person icon -->
+    <group>
+        <!-- Head -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,8 m-2,0 a2,2 0,1 1,4 0 a2,2 0,1 1,-4 0"/>
+        
+        <!-- Body -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,11 C10,11 8.5,12.5 8.5,14.5 L8.5,17 L15.5,17 L15.5,14.5 C15.5,12.5 14,11 12,11 Z"/>
+    </group>
+</vector>

@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">Bruff Walking Tour</string>
+    
+    <!-- Location permissions -->
+    <string name="location_permission_required">Location permission is required for the walking tour</string>
+    <string name="location_permission_title">Location Access Required</string>
+    <string name="location_permission_explanation">This app needs location access to provide navigation and detect when you arrive at tour waypoints. Without location access, the tour experience will be limited.</string>
+    <string name="settings">Settings</string>
+    <string name="continue_anyway">Continue Anyway</string>
+    
+    <!-- Network connectivity -->
+    <string name="no_network_connection">No internet connection. Some features may be limited.</string>
+    
+    <!-- Location outside Bruff -->
+    <string name="outside_bruff_message">📍 You appear to be outside Bruff town area.\n\nPlease start the application after you are in the main street for the best tour experience!</string>
+    
+    <!-- Navigation -->
+    <string name="arrived_at_waypoint">🎯 Arrived at %s!</string>
+    <string name="tap_view_details">Tap \'View Details\' to continue</string>
+    <string name="tour_complete">Tour complete!</string>
+    <string name="well_done">Well done!</string>
+    <string name="visit_location">Visit %s</string>
+    <string name="next_location">Next Location</string>
+    <string name="view_details">View Details</string>
+    <string name="tour_complete_celebration">🎉 Tour Complete! Well done!</string>
+    
+    <!-- Waypoint images -->
+    <string name="viewing_photo">📷 Viewing %s...</string>
+    <string name="viewing_location_details">📷 Viewing location details...</string>
+    
+    <!-- Image types -->
+    <string name="tripadvisor_photo">TripAdvisor Photo</string>
+    <string name="heritage_site_photo">Heritage Site Photo</string>
+    <string name="historical_photo">Historical Photo</string>
+    <string name="local_news_photo">Local News Photo</string>
+    <string name="photo_available">Photo Available</string>
+    
+    <!-- Tour area -->
+    <string name="bruff_tour_area">Bruff Tour Area</string>
+    <string name="walking_tour_coverage_area">Walking tour coverage area (%s radius)</string>
+</resources>

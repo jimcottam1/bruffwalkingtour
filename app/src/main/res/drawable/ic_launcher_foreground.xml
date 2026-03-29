@@ -1,0 +1,53 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background circle -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M54,54m-45,0a45,45 0,1 1,90 0a45,45 0,1 1,-90 0" />
+    
+    <!-- Walking person silhouette -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45,25c3,0 5.5,2.5 5.5,5.5S48,36 45,36s-5.5,-2.5 -5.5,-5.5S42,25 45,25z" />
+    
+    <!-- Body and walking pose -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45,38c-1,0 -2,0.5 -2.5,1.5L40,48l-3,12c-0.5,1.5 0.5,3 2,3h2l2,-8h2l2,8h2c1.5,0 2.5,-1.5 2,-3l-3,-12l-2.5,-8.5C47,38.5 46,38 45,38z" />
+    
+    <!-- Walking legs -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,60l-1,12c0,1 0.5,2 1.5,2s1.5,-1 1.5,-2l1,-12" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M47,60l2,12c0,1 0.5,2 1.5,2s1.5,-1 1.5,-2l-1,-12" />
+    
+    <!-- Map/location pin -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M65,35c-4,0 -7,3 -7,7c0,5 7,12 7,12s7,-7 7,-12C72,38 69,35 65,35zM65,44c-1.5,0 -2.5,-1 -2.5,-2.5s1,-2.5 2.5,-2.5s2.5,1 2.5,2.5S66.5,44 65,44z" />
+    
+    <!-- Walking path/trail -->
+    <path
+        android:fillColor="#4CAF50"
+        android:strokeColor="#2E7D32"
+        android:strokeWidth="1"
+        android:pathData="M25,75Q35,70 45,75T65,75T85,75" />
+    
+    <!-- Small waypoint markers along path -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M30,73m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M54,75m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M78,73m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+
+</vector>

@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    
+    <!-- Green circle background for visited waypoint -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M16,3 C22.08,3 27,7.92 27,14 C27,22 16,29 16,29 C16,29 5,22 5,14 C5,7.92 9.92,3 16,3 Z"/>
+    
+    <!-- White border -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M16,5 C20.96,5 25,9.04 25,14 C25,20.5 16,26.5 16,26.5 C16,26.5 7,20.5 7,14 C7,9.04 11.04,5 16,5 Z"/>
+    
+    <!-- Green inner circle -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M16,7 C19.87,7 23,10.13 23,14 C23,19 16,24 16,24 C16,24 9,19 9,14 C9,10.13 12.13,7 16,7 Z"/>
+    
+    <!-- White checkmark to indicate "visited" -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.0"
+        android:pathData="M13,14 L15.5,16.5 L19,12.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>
