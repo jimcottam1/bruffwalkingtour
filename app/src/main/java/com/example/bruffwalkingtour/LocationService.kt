@@ -9,51 +9,73 @@ import com.google.android.gms.location.*
 import kotlin.math.*
 
 class LocationService(private val context: Context) {
-    
+
     companion object {
         // Sean Wall Monument centered rectangular boundary - matching MainActivity
         private const val SEAN_WALL_CENTER_LAT = 52.47785299293757
         private const val SEAN_WALL_CENTER_LON = -8.54801677334652
         private const val BOUNDARY_WIDTH_KM = 1.5  // 1.5km wide (east-west)
         private const val BOUNDARY_HEIGHT_KM = 3.0 // 3km long (north-south)
+
+        // Only accept GPS fixes with accuracy better than this threshold.
+        // After ACCURACY_TIMEOUT_MS without a good fix, accept whatever is available.
+        private const val ACCURACY_THRESHOLD_M = 50f
+        private const val ACCURACY_TIMEOUT_MS = 15_000L
     }
-    
-    private val fusedLocationClient: FusedLocationProviderClient = 
+
+    private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
-    
+
     private val _currentLocation = MutableLiveData<Location>()
     val currentLocation: LiveData<Location> = _currentLocation
-    
+
     private val _nearbyWaypoint = MutableLiveData<TourWaypoint?>()
     val nearbyWaypoint: LiveData<TourWaypoint?> = _nearbyWaypoint
-    
+
     private val _distanceToNext = MutableLiveData<Float>()
     val distanceToNext: LiveData<Float> = _distanceToNext
-    
+
     private val _tourCompleted = MutableLiveData<Boolean>()
     val tourCompleted: LiveData<Boolean> = _tourCompleted
-    
+
     private val _outsideTourArea = MutableLiveData<String?>()
     val outsideTourArea: LiveData<String?> = _outsideTourArea
-    
+
+    /** Accuracy of the last accepted GPS fix in metres, or null if no fix yet. */
+    private val _locationAccuracy = MutableLiveData<Float?>()
+    val locationAccuracy: LiveData<Float?> = _locationAccuracy
+
     private var currentTour: WalkingTour? = null
     private var currentWaypointIndex = 0
     private var lastNotifiedWaypoint: TourWaypoint? = null
-    
+    private var locationStartTime = 0L
+
     private val locationRequest = LocationRequest.Builder(
         Priority.PRIORITY_HIGH_ACCURACY,
-        3000L // 3 seconds for more responsive updates
+        3000L
     ).apply {
-        setMinUpdateIntervalMillis(1000L) // 1 second minimum for testing
-        setMaxUpdateDelayMillis(5000L) // 5 seconds maximum delay
-        setWaitForAccurateLocation(false) // Don't wait for perfect accuracy
+        setMinUpdateIntervalMillis(1000L)
+        setMaxUpdateDelayMillis(5000L)
+        setWaitForAccurateLocation(false)
     }.build()
-    
+
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             locationResult.lastLocation?.let { location ->
                 val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
-                LogUtils.d("LocationService", "[$timestamp] Location update: ${location.latitude}, ${location.longitude} (accuracy: ${location.accuracy}m)")
+                LogUtils.d("LocationService", "[$timestamp] Raw fix: ${location.latitude}, ${location.longitude} (accuracy: ${location.accuracy}m)")
+
+                val elapsed = System.currentTimeMillis() - locationStartTime
+                val accuracyOk = location.accuracy <= ACCURACY_THRESHOLD_M
+                val timedOut = elapsed >= ACCURACY_TIMEOUT_MS
+
+                if (!accuracyOk && !timedOut) {
+                    LogUtils.d("LocationService", "Skipping inaccurate fix (${location.accuracy}m > ${ACCURACY_THRESHOLD_M}m, waited ${elapsed}ms)")
+                    _locationAccuracy.value = location.accuracy
+                    return
+                }
+
+                _locationAccuracy.value = location.accuracy
                 _currentLocation.value = location
                 checkIfInTourArea(location)
                 checkProximityToWaypoints(location)
@@ -90,6 +112,8 @@ class LocationService(private val context: Context) {
             // Still try to request updates in case user enables GPS later
         }
         
+        locationStartTime = System.currentTimeMillis()
+        _locationAccuracy.value = null
         LogUtils.d("LocationService", "Starting real location updates")
         try {
             fusedLocationClient.requestLocationUpdates(

@@ -129,3 +129,49 @@ describe('LocationService.isSupported', () => {
     expect(typeof LocationService.isSupported()).toBe('boolean');
   });
 });
+
+// ---- Accuracy reporting via the callback -----------------------------------
+
+describe('LocationService accuracy in callback', () => {
+  it('passes accuracy to onUpdate from the position object', () => {
+    const geo = mockGeo();
+    const svc = new LocationService(geo);
+    const onUpdate = vi.fn();
+    svc.start(onUpdate, () => {});
+
+    const successCb = geo.watchPosition.mock.calls[0][0];
+    successCb({ coords: { latitude: 52.477, longitude: -8.548, accuracy: 8 } });
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ accuracy: 8 }),
+    );
+  });
+
+  it('passes high accuracy value correctly', () => {
+    const geo = mockGeo();
+    const svc = new LocationService(geo);
+    const onUpdate = vi.fn();
+    svc.start(onUpdate, () => {});
+
+    const successCb = geo.watchPosition.mock.calls[0][0];
+    successCb({ coords: { latitude: 52.477, longitude: -8.548, accuracy: 250 } });
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ accuracy: 250 }),
+    );
+  });
+
+  it('each update returns the accuracy from that specific fix', () => {
+    const geo = mockGeo();
+    const svc = new LocationService(geo);
+    const onUpdate = vi.fn();
+    svc.start(onUpdate, () => {});
+
+    const successCb = geo.watchPosition.mock.calls[0][0];
+    successCb({ coords: { latitude: 52.477, longitude: -8.548, accuracy: 120 } });
+    successCb({ coords: { latitude: 52.477, longitude: -8.548, accuracy: 15 } });
+
+    expect(onUpdate.mock.calls[0][0].accuracy).toBe(120);
+    expect(onUpdate.mock.calls[1][0].accuracy).toBe(15);
+  });
+});

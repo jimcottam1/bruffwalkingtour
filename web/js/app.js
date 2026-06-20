@@ -21,7 +21,15 @@ import {
   updateUserLocation,
   drawRoute,
   panTo,
+  recentre,
+  isFollowing,
 } from './map.js';
+
+// GPS fixes with accuracy worse than this are ignored (matching Android threshold)
+const ACCURACY_THRESHOLD_M = 50;
+
+// Only re-fetch the route from OSRM when the user has moved more than this
+const ROUTE_REFRESH_THRESHOLD_M = 20;
 
 // ---------------------------------------------------------------------------
 // Tour page  (tour.html)
@@ -36,15 +44,27 @@ export function initTourPage() {
     return;
   }
 
-  const navText = document.getElementById('navigation-instruction');
-  const distText = document.getElementById('distance-info');
-  const boundaryWarning = document.getElementById('boundary-warning');
+  const navText       = document.getElementById('navigation-instruction');
+  const distText      = document.getElementById('distance-info');
+  const boundaryWarn  = document.getElementById('boundary-warning');
   const arrivalBanner = document.getElementById('arrival-banner');
-  const arrivalLink = document.getElementById('arrival-link');
+  const arrivalLink   = document.getElementById('arrival-link');
+  const recenterBtn   = document.getElementById('recenter-btn');
+  const gpsBadge      = document.getElementById('gps-badge');
 
-  const map = initMap('map');
+  // Wire up the re-centre button
+  if (recenterBtn) {
+    recenterBtn.addEventListener('click', () => {
+      recentre();
+      recenterBtn.hidden = true;
+    });
+  }
 
-  // Draw markers for current state
+  const map = initMap('map', (following) => {
+    // Show re-centre button when user has manually panned away
+    if (recenterBtn) recenterBtn.hidden = following;
+  });
+
   _refreshMarkers(tour);
 
   // Draw initial route from tour centre → first waypoint as placeholder
@@ -65,17 +85,44 @@ export function initTourPage() {
 
   const locationSvc = new LocationService();
 
+  let lastRouteLat = null;
+  let lastRouteLon = null;
+  let locationStartTime = Date.now();
+  let firstGoodFix = false;
+
   locationSvc.start(
-    ({ lat, lon }) => {
+    ({ lat, lon, accuracy }) => {
+      const elapsed = Date.now() - locationStartTime;
+      const accuracyOk = accuracy <= ACCURACY_THRESHOLD_M;
+      const timedOut   = elapsed >= 15_000;
+
+      // Update the GPS badge regardless of accuracy
+      if (gpsBadge) {
+        if (!accuracyOk && !timedOut) {
+          gpsBadge.textContent = `GPS: ±${Math.round(accuracy)}m (low)`;
+        } else if (accuracy <= 10) {
+          gpsBadge.textContent = `GPS: ±${Math.round(accuracy)}m ●`;
+        } else if (accuracy <= 30) {
+          gpsBadge.textContent = `GPS: ±${Math.round(accuracy)}m ◑`;
+        } else {
+          gpsBadge.textContent = `GPS: ±${Math.round(accuracy)}m ○`;
+        }
+      }
+
+      // Skip inaccurate fixes until timeout
+      if (!accuracyOk && !timedOut) return;
+
+      if (!firstGoodFix) {
+        firstGoodFix = true;
+        lastRouteLat = lat;
+        lastRouteLon = lon;
+      }
+
       updateUserLocation(lat, lon);
       panTo(lat, lon);
 
       // Boundary check
-      if (isOutsideBoundary(lat, lon)) {
-        boundaryWarning.hidden = false;
-      } else {
-        boundaryWarning.hidden = true;
-      }
+      boundaryWarn.hidden = !isOutsideBoundary(lat, lon);
 
       // Proximity — only fires once per waypoint
       const arrived = tour.checkProximity(lat, lon);
@@ -83,26 +130,33 @@ export function initTourPage() {
         arrivalLink.textContent = `You've arrived at ${arrived.name} — tap to explore`;
         arrivalLink.href = `detail.html?id=${arrived.id}`;
         arrivalBanner.hidden = false;
-        setTimeout(() => {
-          arrivalBanner.hidden = true;
-        }, 15000);
+        setTimeout(() => { arrivalBanner.hidden = true; }, 15000);
       }
 
       // Navigation instructions
       const wp = tour.getCurrentWaypoint();
       if (wp) {
-        const dist = haversineDistance(lat, lon, wp.latitude, wp.longitude);
+        const dist    = haversineDistance(lat, lon, wp.latitude, wp.longitude);
         const bearing = bearingDeg(lat, lon, wp.latitude, wp.longitude);
-        navText.textContent = `${directionFromBearing(bearing)} to ${wp.name}`;
+        navText.textContent  = `${directionFromBearing(bearing)} to ${wp.name}`;
         distText.textContent = `${formatDistance(dist)} · ~${formatEta(dist)}`;
 
-        // Refresh route from current location
-        getRoute(lat, lon, wp.latitude, wp.longitude).then((pts) => drawRoute(pts));
+        // Refresh route only when user has moved ROUTE_REFRESH_THRESHOLD_M or more
+        const movedSinceLastRoute = lastRouteLat !== null
+          ? haversineDistance(lat, lon, lastRouteLat, lastRouteLon)
+          : Infinity;
+
+        if (movedSinceLastRoute >= ROUTE_REFRESH_THRESHOLD_M) {
+          lastRouteLat = lat;
+          lastRouteLon = lon;
+          getRoute(lat, lon, wp.latitude, wp.longitude).then((pts) => drawRoute(pts));
+        }
       }
     },
     (errMsg) => {
-      navText.textContent = errMsg;
+      navText.textContent  = errMsg;
       distText.textContent = '';
+      if (gpsBadge) gpsBadge.textContent = 'GPS: unavailable';
     },
   );
 
@@ -135,8 +189,8 @@ export function initDetailPage() {
   const nameEl = document.getElementById('waypoint-name');
   const descEl = document.getElementById('waypoint-description');
   const histEl = document.getElementById('waypoint-history');
-  const imgEl = document.getElementById('waypoint-image');
-  const btn = document.getElementById('continue-btn');
+  const imgEl  = document.getElementById('waypoint-image');
+  const btn    = document.getElementById('continue-btn');
 
   if (!waypoint) {
     nameEl.textContent = 'Waypoint not found';
@@ -163,7 +217,7 @@ export function initDetailPage() {
   const isLast = tour.getCurrentIndex() === WAYPOINTS.length - 1;
   btn.textContent = isLast
     ? 'Complete Your Bruff Adventure'
-    : 'Continue Your Bruff Journey \u2192';
+    : 'Continue Your Bruff Journey →';
 
   btn.addEventListener('click', () => {
     const complete = tour.markCurrentVisited();
@@ -177,8 +231,8 @@ export function initDetailPage() {
 
 export function initCompletePage() {
   const tour = new TourController(WAYPOINTS);
-  const list = document.getElementById('visited-list');
-  const shareBtn = document.getElementById('share-btn');
+  const list       = document.getElementById('visited-list');
+  const shareBtn   = document.getElementById('share-btn');
   const restartBtn = document.getElementById('restart-btn');
 
   // Render the visited waypoints summary

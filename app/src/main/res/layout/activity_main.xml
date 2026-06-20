@@ -32,10 +32,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="GPS locating... Please wait"
+            android:text="GPS locating… Please wait"
             android:textColor="@android:color/white"
             android:textSize="14sp" />
 
+        <TextView
+            android:id="@+id/gps_accuracy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="GPS: locating…"
+            android:textColor="#80FFFFFF"
+            android:textSize="11sp" />
 
     </LinearLayout>
 

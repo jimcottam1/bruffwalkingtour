@@ -4,6 +4,10 @@
  *
  * Guard: calling initMap() twice on the same element throws in Leaflet.
  * The module stores the instance and returns it on repeated calls.
+ *
+ * Follow mode: the map pans to the user's position automatically until the
+ * user manually drags/pans, at which point follow mode is suspended. A
+ * re-centre button (managed by the caller) can restore follow mode.
  */
 
 import { BOUNDARY } from './data.js';
@@ -13,14 +17,20 @@ let _userMarker = null;
 let _routePolyline = null;
 const _waypointMarkers = [];
 
+let _followMode = true;
+let _onFollowChange = null; // callback(isFollowing: boolean)
+
 /**
  * Initialise the Leaflet map. Safe to call more than once — returns existing
  * instance on repeat calls.
  * @param {string} elementId - ID of the container <div>
+ * @param {function} [onFollowChange] - called when follow mode changes
  * @returns the Leaflet map instance
  */
-export function initMap(elementId) {
+export function initMap(elementId, onFollowChange = null) {
   if (_map) return _map;
+
+  _onFollowChange = onFollowChange;
 
   _map = L.map(elementId, { zoomControl: true });
 
@@ -33,6 +43,9 @@ export function initMap(elementId) {
   // Start centred on Sean Wall Monument at street level — matches Android setupMap()
   _map.setView([BOUNDARY.CENTER_LAT, BOUNDARY.CENTER_LON], 17.5);
   _drawBoundary();
+
+  // When the user manually drags the map, suspend follow mode
+  _map.on('dragstart', () => _setFollowMode(false));
 
   return _map;
 }
@@ -47,7 +60,25 @@ export function destroyMap() {
     _userMarker = null;
     _routePolyline = null;
     _waypointMarkers.length = 0;
+    _followMode = true;
+    _onFollowChange = null;
   }
+}
+
+/**
+ * Re-enable automatic map-following and pan to the user's last known position.
+ * Call this when the user taps the re-centre button.
+ */
+export function recentre() {
+  _setFollowMode(true);
+  if (_userMarker) {
+    _map?.panTo(_userMarker.getLatLng(), { animate: true, duration: 0.5 });
+  }
+}
+
+/** Returns true when the map is currently following the user's position. */
+export function isFollowing() {
+  return _followMode;
 }
 
 /**
@@ -79,7 +110,7 @@ export function addWaypointMarkers(waypoints, currentIndex, visitedIds = []) {
 
     const marker = L.marker([wp.latitude, wp.longitude], { icon })
       .addTo(_map)
-      .bindPopup(`<strong>${wp.name}</strong>`);
+      .bindPopup(`<strong>${wp.name}</strong><br><small>${wp.description}</small>`);
 
     _waypointMarkers.push(marker);
   });
@@ -124,12 +155,23 @@ export function drawRoute(latLonArray) {
   }
 }
 
-/** Pan the map to a coordinate with animation. */
+/**
+ * Pan the map to a coordinate — only if follow mode is active.
+ * Callers should always call panTo; this function decides whether to act.
+ */
 export function panTo(lat, lon) {
-  _map?.panTo([lat, lon], { animate: true, duration: 0.5 });
+  if (!_followMode || !_map) return;
+  _map.panTo([lat, lon], { animate: true, duration: 0.5 });
 }
 
-// Internal: draw the rectangular tour boundary
+// ---- Internal helpers -------------------------------------------------------
+
+function _setFollowMode(following) {
+  if (_followMode === following) return;
+  _followMode = following;
+  _onFollowChange?.(following);
+}
+
 function _drawBoundary() {
   const halfWidthDeg =
     BOUNDARY.WIDTH_KM /

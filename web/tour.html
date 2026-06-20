@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1a1208">
   <title>Bruff Heritage Trail &mdash; Map</title>
   <link rel="manifest" href="manifest.json">
@@ -29,6 +29,12 @@
 
   <!-- Home button — top-left corner -->
   <a href="index.html" id="home-btn" aria-label="Back to home">&larr; Home</a>
+
+  <!-- Re-centre button — appears when user has manually panned away -->
+  <button id="recenter-btn" aria-label="Re-centre map on my location" hidden>⊙ Re-centre</button>
+
+  <!-- GPS accuracy badge — top-right -->
+  <div id="gps-badge" aria-live="polite" aria-label="GPS accuracy">GPS: locating&hellip;</div>
 
   <!-- Bottom navigation panel -->
   <div id="nav-panel">

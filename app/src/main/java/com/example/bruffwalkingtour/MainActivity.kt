@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
@@ -22,6 +23,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -34,12 +39,10 @@ import android.graphics.drawable.Drawable
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
-import org.osmdroid.views.overlay.infowindow.InfoWindow
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
-import org.osmdroid.util.Distance
 import org.osmdroid.views.overlay.Overlay
 import android.graphics.Point
 import android.view.MotionEvent
@@ -64,6 +67,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var routeService: RouteService
     private lateinit var navigationInstructionText: TextView
     private lateinit var distanceInfoText: TextView
+    private lateinit var gpsAccuracyText: TextView
     private var currentTour: WalkingTour? = null
     private var waypointMarkers = mutableListOf<Marker>()
     private var routePolylines = mutableListOf<Polyline>()
@@ -161,7 +165,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupViews() {
         navigationInstructionText = findViewById(R.id.navigation_instruction)
         distanceInfoText = findViewById(R.id.distance_info)
-        
+        gpsAccuracyText = findViewById(R.id.gps_accuracy)
+
         // Enable clickable links in navigation text
         navigationInstructionText.movementMethod = LinkMovementMethod.getInstance()
     }
@@ -221,20 +226,23 @@ class MainActivity : AppCompatActivity() {
         
         locationService.currentLocation.observe(this, Observer { location ->
             currentLocation = location
-            val timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
-            LogUtils.d("MainActivity", "[$timestamp] Location received in MainActivity: ${location.latitude}, ${location.longitude}")
+            LogUtils.d("MainActivity", "Location received: ${location.latitude}, ${location.longitude} (±${location.accuracy.toInt()}m)")
             updateMapCenter(location)
             updateNavigationInstructions(location)
-            // Update all marker hover help with current location context
             updateAllWaypointMarkers()
-            
-            
-            // Visual feedback that location is updating
-            findViewById<TextView>(R.id.distance_info)?.let { textView ->
-                val currentText = textView.text.toString()
-                if (!currentText.contains("•")) {
-                    textView.text = "$currentText • Updated $timestamp"
+        })
+
+        locationService.locationAccuracy.observe(this, Observer { accuracy ->
+            if (accuracy == null) {
+                gpsAccuracyText.text = "GPS: locating…"
+            } else {
+                val label = when {
+                    accuracy <= 10f -> "GPS: ±${accuracy.toInt()}m  ●"
+                    accuracy <= 30f -> "GPS: ±${accuracy.toInt()}m  ◑"
+                    accuracy <= 50f -> "GPS: ±${accuracy.toInt()}m  ○"
+                    else            -> "GPS: low accuracy (±${accuracy.toInt()}m)"
                 }
+                gpsAccuracyText.text = label
             }
         })
         
@@ -278,16 +286,47 @@ class MainActivity : AppCompatActivity() {
         currentTour?.let { tour ->
             LogUtils.d("MainActivity", "Tour loaded: ${tour.name} with ${tour.waypoints.size} waypoints")
             locationService.setCurrentTour(tour)
-            LogUtils.d("MainActivity", "About to add waypoint markers to map")
             addWaypointMarkersToMap(tour.waypoints)
-            LogUtils.d("MainActivity", "Waypoint markers added to map")
-            // Update navigation instructions when current location is available
-            currentLocation?.let { location ->
-                updateNavigationInstructions(location)
-            }
-            // Blue lines removed - apparently they were offensive to the eyes
+            // Draw L-shaped placeholder routes immediately, then upgrade to OSRM road routes
+            drawRouteOnMap(tour.waypoints)
+            drawRoutesAsync(tour.waypoints)
+            currentLocation?.let { location -> updateNavigationInstructions(location) }
         } ?: run {
             android.util.Log.e("MainActivity", "Failed to load default tour!")
+        }
+    }
+
+    private fun drawRoutesAsync(waypoints: List<TourWaypoint>) {
+        lifecycleScope.launch {
+            for (i in 0 until waypoints.size - 1) {
+                val start = GeoPoint(waypoints[i].latitude, waypoints[i].longitude)
+                val end   = GeoPoint(waypoints[i + 1].latitude, waypoints[i + 1].longitude)
+                try {
+                    val points = withContext(Dispatchers.IO) {
+                        routeService.getRoadBasedRoute(start, end)
+                    }
+                    // Replace placeholder polylines with real OSRM routes
+                    routePolylines.forEach { mapView.overlays.remove(it) }
+                    routePolylines.clear()
+                    waypoints.indices.drop(1).forEachIndexed { idx, _ ->
+                        val poly = Polyline().apply {
+                            setPoints(if (idx == i) points else listOf(
+                                GeoPoint(waypoints[idx].latitude,     waypoints[idx].longitude),
+                                GeoPoint(waypoints[idx + 1].latitude, waypoints[idx + 1].longitude)
+                            ))
+                            getOutlinePaint().color = Color.argb(200, 200, 146, 42)
+                            getOutlinePaint().strokeWidth = 8.0f
+                            getOutlinePaint().strokeCap  = android.graphics.Paint.Cap.ROUND
+                            getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
+                        }
+                        mapView.overlays.add(poly)
+                        routePolylines.add(poly)
+                    }
+                    mapView.invalidate()
+                } catch (e: Exception) {
+                    LogUtils.w("MainActivity", "OSRM route fetch failed for leg $i: ${e.message}")
+                }
+            }
         }
     }
     
@@ -401,8 +440,9 @@ class MainActivity : AppCompatActivity() {
             LogUtils.d("MainActivity", "MyLocationOverlay created")
             
             myLocationOverlay?.enableMyLocation()
-            myLocationOverlay?.enableFollowLocation()
-            LogUtils.d("MainActivity", "Location and follow location enabled")
+            // Do NOT call enableFollowLocation() — updateMapCenter() already animates
+            // the map on every fix; enabling both causes the two systems to fight.
+            LogUtils.d("MainActivity", "My-location overlay enabled")
             
             // Set custom person icon for user location
             val personDrawable = ContextCompat.getDrawable(this, R.drawable.ic_person_location)
@@ -1045,13 +1085,7 @@ class MainActivity : AppCompatActivity() {
                                     LogUtils.d("BruffTour", "Marker tapped: ${waypoint.name}")
                                     showImagePreview(waypoint)
                                     
-                                    // Haptic feedback
-                                    try {
-                                        @Suppress("DEPRECATION")
-                                        (getSystemService(VIBRATOR_SERVICE) as? android.os.Vibrator)?.vibrate(50)
-                                    } catch (e: Exception) {
-                                        // Ignore if vibration not available
-                                    }
+                                    vibrate()
                                     
                                     return true // Only consume when we actually handle a marker tap
                                 }
@@ -1071,6 +1105,25 @@ class MainActivity : AppCompatActivity() {
         LogUtils.d("BruffTour", "Smart touch overlay added for marker previews")
     }
     
+    private fun vibrate() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = getSystemService(android.os.VibratorManager::class.java)
+                vm?.defaultVibrator?.vibrate(
+                    android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                @Suppress("DEPRECATION")
+                (getSystemService(VIBRATOR_SERVICE) as? android.os.Vibrator)?.vibrate(
+                    android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                (getSystemService(VIBRATOR_SERVICE) as? android.os.Vibrator)?.vibrate(50)
+            }
+        } catch (_: Exception) {}
+    }
+
     private fun getDirectionalArrow(bearing: Float): String {
         val normalizedBearing = (bearing + 360) % 360
         return when {

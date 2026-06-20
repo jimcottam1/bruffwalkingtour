@@ -61,6 +61,7 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.7.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.2")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.squareup.picasso:picasso:2.8")
     

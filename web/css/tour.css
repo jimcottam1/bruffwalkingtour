@@ -138,3 +138,40 @@ html, body {
   0%,  100% { box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 0   rgba(200,146,42,0.5); }
   50%        { box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 12px rgba(200,146,42,0); }
 }
+
+/* Re-centre button — shown when user has manually panned away from their position */
+#recenter-btn {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  z-index: 1050;
+  background: var(--color-nav-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(200, 146, 42, 0.35);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+#recenter-btn:active { opacity: 0.7; }
+
+/* GPS accuracy badge — below the re-centre button */
+#gps-badge {
+  position: fixed;
+  top: calc(max(12px, env(safe-area-inset-top)) + 44px);
+  right: 12px;
+  z-index: 1050;
+  background: var(--color-nav-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  padding: 4px 9px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(200, 146, 42, 0.2);
+  pointer-events: none;
+}
