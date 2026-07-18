@@ -13,12 +13,18 @@ import org.junit.Assert.*
  * Key behaviours exercised:
  *  - Entering the proximity radius fires exactly one arrival notification
  *  - The notification is not repeated while still inside the radius
- *  - Moving outside the radius clears the arrival state
+ *  - Moving outside the radius (beyond the hysteresis margin) clears the arrival state
+ *  - GPS jitter just past the radius, within the hysteresis margin, does NOT clear it
  *  - Re-entering the radius fires a new notification
  *  - Moving to the next waypoint resets notification state
  *  - Each waypoint's individual proximityRadius is respected (15 / 20 / 25 / 30 m)
  */
 class ProximityLogicTest {
+
+    companion object {
+        // Mirrors LocationService.EXIT_HYSTERESIS_M
+        private const val EXIT_HYSTERESIS_M = 5f
+    }
 
     // -----------------------------------------------------------------------
     // Mirror of LocationService proximity state machine
@@ -40,7 +46,7 @@ class ProximityLogicTest {
                     nearbyWaypoint = currentWaypoint
                     lastNotifiedWaypoint = currentWaypoint
                 }
-            } else {
+            } else if (distance > currentWaypoint.proximityRadius + EXIT_HYSTERESIS_M) {
                 if (nearbyWaypoint == currentWaypoint) {
                     nearbyWaypoint = null
                     lastNotifiedWaypoint = null
@@ -128,22 +134,22 @@ class ProximityLogicTest {
     }
 
     // -----------------------------------------------------------------------
-    // Moving away clears state
+    // Moving away clears state (once past the hysteresis margin)
     // -----------------------------------------------------------------------
 
     @Test
     fun movingAway_clearsNearbyWaypoint() {
         val wp = proximity.getCurrentWaypoint()!!
         proximity.checkProximity((wp.proximityRadius - 1).toFloat()) // arrive
-        proximity.checkProximity((wp.proximityRadius + 5).toFloat()) // leave
-        assertNull("nearbyWaypoint should clear when moving outside radius", proximity.nearbyWaypoint)
+        proximity.checkProximity((wp.proximityRadius + EXIT_HYSTERESIS_M + 1).toFloat()) // leave
+        assertNull("nearbyWaypoint should clear when moving outside radius + hysteresis", proximity.nearbyWaypoint)
     }
 
     @Test
     fun movingAway_clearsLastNotifiedWaypoint() {
         val wp = proximity.getCurrentWaypoint()!!
         proximity.checkProximity((wp.proximityRadius - 1).toFloat())
-        proximity.checkProximity((wp.proximityRadius + 5).toFloat())
+        proximity.checkProximity((wp.proximityRadius + EXIT_HYSTERESIS_M + 1).toFloat())
         assertNull("lastNotifiedWaypoint should clear when moving away", proximity.lastNotifiedWaypoint)
     }
 
@@ -151,9 +157,46 @@ class ProximityLogicTest {
     fun afterMovingAway_reenteringRadius_firesNewArrival() {
         val wp = proximity.getCurrentWaypoint()!!
         proximity.checkProximity((wp.proximityRadius - 1).toFloat()) // arrive
-        proximity.checkProximity((wp.proximityRadius + 5).toFloat()) // leave — clears state
+        proximity.checkProximity((wp.proximityRadius + EXIT_HYSTERESIS_M + 1).toFloat()) // leave — clears state
         proximity.checkProximity((wp.proximityRadius - 1).toFloat()) // arrive again
         assertNotNull("Re-entry into radius should fire a new arrival", proximity.nearbyWaypoint)
+    }
+
+    // -----------------------------------------------------------------------
+    // Hysteresis: GPS jitter just past the radius must NOT clear arrival
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun jitterJustPastRadius_withinHysteresis_doesNotClearArrival() {
+        val wp = proximity.getCurrentWaypoint()!!
+        proximity.checkProximity((wp.proximityRadius - 1).toFloat()) // arrive
+        proximity.checkProximity((wp.proximityRadius + 1).toFloat()) // jitter just outside radius
+        assertNotNull(
+            "Arrival should stay set for jitter within the hysteresis margin",
+            proximity.nearbyWaypoint
+        )
+    }
+
+    @Test
+    fun jitterAtExactlyRadiusPlusHysteresis_doesNotClearArrival() {
+        val wp = proximity.getCurrentWaypoint()!!
+        proximity.checkProximity((wp.proximityRadius - 1).toFloat()) // arrive
+        proximity.checkProximity((wp.proximityRadius + EXIT_HYSTERESIS_M).toFloat()) // exactly at margin
+        assertNotNull(
+            "Arrival should not clear at exactly radius + hysteresis (strict > required)",
+            proximity.nearbyWaypoint
+        )
+    }
+
+    @Test
+    fun distanceJustBeyondHysteresisMargin_clearsArrival() {
+        val wp = proximity.getCurrentWaypoint()!!
+        proximity.checkProximity((wp.proximityRadius - 1).toFloat()) // arrive
+        proximity.checkProximity((wp.proximityRadius + EXIT_HYSTERESIS_M + 0.1f).toFloat()) // just past margin
+        assertNull(
+            "Arrival should clear once distance exceeds radius + hysteresis",
+            proximity.nearbyWaypoint
+        )
     }
 
     // -----------------------------------------------------------------------

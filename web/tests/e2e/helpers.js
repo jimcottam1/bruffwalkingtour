@@ -17,6 +17,8 @@ export function addWaypointMarkers()  {}
 export function updateUserLocation()  {}
 export function drawRoute()           {}
 export function panTo()               {}
+export function recentre()            {}
+export function isFollowing()         { return true; }
       `,
     });
   });
@@ -45,10 +47,27 @@ export async function injectGeoMock(page) {
       get: () => geoMock,
       configurable: true,
     });
+    // The app registers its watchPosition callback asynchronously (after its
+    // ES module chain finishes loading), so a fix fired immediately after a
+    // client-side navigation (e.g. clicking back to tour.html) can arrive
+    // before the callback is registered. Poll briefly instead of dropping it,
+    // mirroring how a real GPS provider keeps emitting fixes until the app's
+    // watcher is ready.
     window.simulatePosition = (lat, lon, accuracy = 5) => {
+      const fire = () => _successCb({ coords: { latitude: lat, longitude: lon, accuracy } });
       if (_successCb) {
-        _successCb({ coords: { latitude: lat, longitude: lon, accuracy } });
+        fire();
+        return;
       }
+      const deadline = Date.now() + 5000;
+      const poll = () => {
+        if (_successCb) {
+          fire();
+        } else if (Date.now() < deadline) {
+          setTimeout(poll, 20);
+        }
+      };
+      poll();
     };
   });
 }

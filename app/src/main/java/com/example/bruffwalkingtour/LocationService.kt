@@ -21,6 +21,15 @@ class LocationService(private val context: Context) {
         // After ACCURACY_TIMEOUT_MS without a good fix, accept whatever is available.
         private const val ACCURACY_THRESHOLD_M = 50f
         private const val ACCURACY_TIMEOUT_MS = 15_000L
+
+        // Extra distance beyond proximityRadius the user must move before an arrival
+        // is cleared. Prevents GPS jitter right at the boundary from re-firing the
+        // "arrived" toast repeatedly.
+        private const val EXIT_HYSTERESIS_M = 5f
+
+        // Average walking speed used to estimate time-to-waypoint, in metres/minute
+        // (~5 km/h). Must match WALKING_SPEED_MPM in web/js/data.js.
+        private const val WALKING_SPEED_MPM = 83f
     }
 
     private val fusedLocationClient: FusedLocationProviderClient =
@@ -236,8 +245,10 @@ class LocationService(private val context: Context) {
                 _nearbyWaypoint.value = currentWaypoint
                 lastNotifiedWaypoint = currentWaypoint
             }
-        } else {
-            // Clear when moving away - but only if we were actually at this waypoint
+        } else if (distance > currentWaypoint.proximityRadius + EXIT_HYSTERESIS_M) {
+            // Clear only once the user has moved clearly outside the radius (with a
+            // hysteresis margin) - avoids re-firing the arrival toast from GPS jitter
+            // right at the boundary. Only clear if we were actually at this waypoint.
             if (_nearbyWaypoint.value == currentWaypoint) {
                 _nearbyWaypoint.value = null
                 lastNotifiedWaypoint = null
@@ -289,7 +300,7 @@ class LocationService(private val context: Context) {
             else -> "${String.format("%.1f", distance / 1000)}km"
         }
         
-        val estimatedTime = "${(distance / 83).toInt() + 1} min" // Assuming 5 km/h walking speed
+        val estimatedTime = "${(distance / WALKING_SPEED_MPM).toInt() + 1} min" // Assuming 5 km/h walking speed
         
         return NavigationInstruction(
             direction = direction,

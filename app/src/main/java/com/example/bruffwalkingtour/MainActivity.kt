@@ -292,40 +292,44 @@ class MainActivity : AppCompatActivity() {
             drawRoutesAsync(tour.waypoints)
             currentLocation?.let { location -> updateNavigationInstructions(location) }
         } ?: run {
-            android.util.Log.e("MainActivity", "Failed to load default tour!")
+            LogUtils.e("MainActivity", "Failed to load default tour!")
         }
     }
 
     private fun drawRoutesAsync(waypoints: List<TourWaypoint>) {
         lifecycleScope.launch {
+            // Accumulates the resolved OSRM points per leg so a later leg's fetch
+            // doesn't overwrite earlier legs that already resolved with a straight-line fallback.
+            val resolvedLegs = arrayOfNulls<List<GeoPoint>>(waypoints.size - 1)
             for (i in 0 until waypoints.size - 1) {
                 val start = GeoPoint(waypoints[i].latitude, waypoints[i].longitude)
                 val end   = GeoPoint(waypoints[i + 1].latitude, waypoints[i + 1].longitude)
                 try {
-                    val points = withContext(Dispatchers.IO) {
+                    resolvedLegs[i] = withContext(Dispatchers.IO) {
                         routeService.getRoadBasedRoute(start, end)
                     }
-                    // Replace placeholder polylines with real OSRM routes
-                    routePolylines.forEach { mapView.overlays.remove(it) }
-                    routePolylines.clear()
-                    waypoints.indices.drop(1).forEachIndexed { idx, _ ->
-                        val poly = Polyline().apply {
-                            setPoints(if (idx == i) points else listOf(
-                                GeoPoint(waypoints[idx].latitude,     waypoints[idx].longitude),
-                                GeoPoint(waypoints[idx + 1].latitude, waypoints[idx + 1].longitude)
-                            ))
-                            getOutlinePaint().color = Color.argb(200, 200, 146, 42)
-                            getOutlinePaint().strokeWidth = 8.0f
-                            getOutlinePaint().strokeCap  = android.graphics.Paint.Cap.ROUND
-                            getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
-                        }
-                        mapView.overlays.add(poly)
-                        routePolylines.add(poly)
-                    }
-                    mapView.invalidate()
                 } catch (e: Exception) {
                     LogUtils.w("MainActivity", "OSRM route fetch failed for leg $i: ${e.message}")
                 }
+
+                // Replace placeholder polylines with whatever legs have resolved so far
+                routePolylines.forEach { mapView.overlays.remove(it) }
+                routePolylines.clear()
+                waypoints.indices.drop(1).forEachIndexed { idx, _ ->
+                    val poly = Polyline().apply {
+                        setPoints(resolvedLegs[idx] ?: listOf(
+                            GeoPoint(waypoints[idx].latitude,     waypoints[idx].longitude),
+                            GeoPoint(waypoints[idx + 1].latitude, waypoints[idx + 1].longitude)
+                        ))
+                        getOutlinePaint().color = Color.argb(200, 200, 146, 42)
+                        getOutlinePaint().strokeWidth = 8.0f
+                        getOutlinePaint().strokeCap  = android.graphics.Paint.Cap.ROUND
+                        getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
+                    }
+                    mapView.overlays.add(poly)
+                    routePolylines.add(poly)
+                }
+                mapView.invalidate()
             }
         }
     }
@@ -350,7 +354,7 @@ class MainActivity : AppCompatActivity() {
             
             mapView.invalidate()
         } catch (e: Exception) {
-            android.util.Log.w("MainActivity", "Error adding tour boundary to map", e)
+            LogUtils.w("MainActivity", "Error adding tour boundary to map", e)
         }
     }
     
@@ -471,15 +475,15 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun addWaypointMarkersToMap(waypoints: List<TourWaypoint>) {
-        android.util.Log.d("MainActivity", "Adding ${waypoints.size} waypoint markers to map")
+        LogUtils.d("MainActivity", "Adding ${waypoints.size} waypoint markers to map")
         waypointMarkers.clear()
         
         waypoints.forEachIndexed { index, waypoint ->
-            LogUtils.e("BruffTour", "Creating marker ${index + 1} for waypoint: ${waypoint.name}")
-            LogUtils.e("BruffTour", "Marker position: ${waypoint.latitude}, ${waypoint.longitude}")
+            LogUtils.d("BruffTour", "Creating marker ${index + 1} for waypoint: ${waypoint.name}")
+            LogUtils.d("BruffTour", "Marker position: ${waypoint.latitude}, ${waypoint.longitude}")
             val marker = Marker(mapView)
             marker.position = GeoPoint(waypoint.latitude, waypoint.longitude)
-            LogUtils.e("BruffTour", "Marker GeoPoint set: ${marker.position.latitude}, ${marker.position.longitude}")
+            LogUtils.d("BruffTour", "Marker GeoPoint set: ${marker.position.latitude}, ${marker.position.longitude}")
             
             // Set context-aware hover help
             updateMarkerHoverHelp(marker, waypoint, index)
@@ -529,7 +533,7 @@ class MainActivity : AppCompatActivity() {
             drawable.draw(canvas)
             bitmap
         } catch (e: Exception) {
-            android.util.Log.w("MainActivity", "Error converting drawable to bitmap", e)
+            LogUtils.w("MainActivity", "Error converting drawable to bitmap", e)
             null
         }
     }

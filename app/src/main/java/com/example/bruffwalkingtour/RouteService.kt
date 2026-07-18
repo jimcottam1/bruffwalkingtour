@@ -4,12 +4,14 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import org.osmdroid.util.GeoPoint
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import com.google.gson.annotations.SerializedName
+import java.util.concurrent.TimeUnit
 
 // OSRM API - Completely FREE, no API key needed
 data class OSRMResponse(
@@ -35,9 +37,18 @@ interface OSRMApi {
 
 class RouteService(private val context: Context) {
     
+    // Bounded timeouts so a slow/hanging OSRM server falls back to the
+    // straight-line route promptly instead of stalling the async upgrade.
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(8, TimeUnit.SECONDS)
+        .readTimeout(8, TimeUnit.SECONDS)
+        .writeTimeout(8, TimeUnit.SECONDS)
+        .build()
+
     // OSRM - Completely FREE, no API key needed!
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://router.project-osrm.org/")
+        .client(httpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
     
