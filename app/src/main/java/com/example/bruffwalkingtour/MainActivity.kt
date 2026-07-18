@@ -131,7 +131,12 @@ class MainActivity : AppCompatActivity() {
         }
         
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
-        
+        // OSM's tile servers block requests with osmdroid's generic default User-Agent
+        // (too many apps abuse the free tile service without identifying themselves).
+        // Identify this app specifically per https://operations.osmfoundation.org/policies/tiles/
+        Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
+        purgeStaleBlockedTileCache()
+
         // Reset location message preference for new session
         getSharedPreferences("bruff_tour_prefs", MODE_PRIVATE)
             .edit().putBoolean("outside_tour_area_message_shown", false).apply()
@@ -153,6 +158,24 @@ class MainActivity : AppCompatActivity() {
         LogUtils.d("MainActivity", "onCreate completed")
     }
     
+    /**
+     * One-time cleanup for installs that ran before the userAgentValue fix above:
+     * OSM's tile-blocked response is a real 200 OK image, so osmdroid cached it to
+     * disk like any other tile and would keep serving it forever. Purge the tile
+     * cache once so those devices self-heal without the user clearing app storage.
+     */
+    private fun purgeStaleBlockedTileCache() {
+        val prefs = getSharedPreferences("bruff_tour_prefs", MODE_PRIVATE)
+        if (prefs.getBoolean("tile_cache_purged_v1", false)) return
+        try {
+            Configuration.getInstance().getOsmdroidTileCache(this)?.deleteRecursively()
+            LogUtils.d("MainActivity", "Purged stale osmdroid tile cache")
+        } catch (e: Exception) {
+            LogUtils.w("MainActivity", "Failed to purge tile cache", e)
+        }
+        prefs.edit().putBoolean("tile_cache_purged_v1", true).apply()
+    }
+
     private fun setupSystemUI() {
         // Hide system navigation bar for full map experience
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
