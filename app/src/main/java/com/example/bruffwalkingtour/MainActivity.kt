@@ -228,13 +228,19 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Fetches and draws a live road route from the user's current position to
-     * their current target waypoint — separate from the static trail-between-
-     * waypoints line drawn by drawRouteOnMap()/drawRoutesAsync(). This is what
-     * actually guides someone from e.g. a car park to the tour's start, or from
-     * one waypoint on to the next. Mirrors web's app.js renderLiveUpdate().
+     * the first waypoint — separate from the static trail-between-waypoints
+     * line drawn by drawRouteOnMap()/drawRoutesAsync(). This is what guides
+     * someone from an unknown starting point (e.g. a car park) to the tour's
+     * actual start. Only relevant before that first waypoint is reached — once
+     * the user is on the marked trail, the static line between waypoints is
+     * the route, so this clears itself out at that point.
      */
     private fun refreshUserRouteIfNeeded(location: Location, force: Boolean = false) {
         if (!tourStarted) return
+        if (locationService.getCurrentWaypointIndex() != 0) {
+            clearUserToWaypointRoute()
+            return
+        }
         val waypoint = locationService.getCurrentWaypoint() ?: return
 
         if (!force) {
@@ -263,7 +269,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun drawUserToWaypointRoute(points: List<GeoPoint>) {
-        userToWaypointPolyline?.let { mapView.overlays.remove(it) }
+        clearUserToWaypointRoute()
         userToWaypointPolyline = Polyline().apply {
             setPoints(points)
             // Blue to match the "current target" waypoint marker colour, visually
@@ -274,6 +280,12 @@ class MainActivity : AppCompatActivity() {
             getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
         }
         mapView.overlays.add(userToWaypointPolyline)
+        mapView.invalidate()
+    }
+
+    private fun clearUserToWaypointRoute() {
+        userToWaypointPolyline?.let { mapView.overlays.remove(it) }
+        userToWaypointPolyline = null
         mapView.invalidate()
     }
 
