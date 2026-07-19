@@ -204,6 +204,10 @@ class MainActivity : AppCompatActivity() {
         returnToIntroJob = null
         boundaryGateOverlay.visibility = View.GONE
         mapView.visibility = View.VISIBLE
+        // Keep the screen awake only for the live tour view — turn-by-turn
+        // guidance is useless if the screen locks mid-walk. Not set on the
+        // gate/intro/completion screens, where it would just waste battery.
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         LogUtils.d("MainActivity", "Starting tour — loading map and route data")
         loadTour()
         addTourBoundaryToMap()
