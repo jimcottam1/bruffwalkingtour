@@ -28,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -60,6 +59,26 @@ class MainActivity : AppCompatActivity() {
         private const val SEAN_WALL_CENTER_LON = -8.54801677334652
         private const val BOUNDARY_WIDTH_KM = 1.5  // 1.5km wide (east-west)
         private const val BOUNDARY_HEIGHT_KM = 3.0 // 3km long (north-south)
+
+        // OSM's raw tile.openstreetmap.org still blocked this app's traffic even
+        // after switching to the canonical URL and a proper, contactable
+        // User-Agent — confirmed on two separate real devices on two separate
+        // networks. Likely fingerprinting the underlying HTTP client rather than
+        // the app-level identity, which is outside this app's control. CARTO's
+        // basemap tiles are free, keyless, OSM-derived, and meant for exactly
+        // this kind of embedding — see https://operations.osmfoundation.org/policies/tiles/
+        // for why raw OSM tiles are not recommended for app distribution.
+        private val CARTO_POSITRON = org.osmdroid.tileprovider.tilesource.XYTileSource(
+            "CartoPositron",
+            0, 20, 256, ".png",
+            arrayOf(
+                "https://a.basemaps.cartocdn.com/light_all/",
+                "https://b.basemaps.cartocdn.com/light_all/",
+                "https://c.basemaps.cartocdn.com/light_all/",
+                "https://d.basemaps.cartocdn.com/light_all/"
+            ),
+            "© OpenStreetMap contributors © CARTO"
+        )
     }
     
     private lateinit var mapView: MapView
@@ -197,7 +216,7 @@ class MainActivity : AppCompatActivity() {
     
     private fun setupMap() {
         mapView = findViewById(R.id.mapview)
-        mapView.setTileSource(TileSourceFactory.MAPNIK)
+        mapView.setTileSource(CARTO_POSITRON)
         mapView.setMultiTouchControls(true)
 
         // OSM's tile usage policy requires visible attribution on the map.

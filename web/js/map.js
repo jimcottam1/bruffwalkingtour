@@ -34,14 +34,16 @@ export function initMap(elementId, onFollowChange = null) {
 
   _map = L.map(elementId, { zoomControl: true });
 
-  // OSM's tile usage policy requires the canonical single-host URL (no {s}.
-  // subdomain sharding — those "may be slower or withdrawn without notice"),
-  // browsers already send a real, identifiable User-Agent automatically per
-  // the policy. https://operations.osmfoundation.org/policies/tiles/
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // OSM's raw tile.openstreetmap.org still blocked this app's traffic even
+  // after switching to the canonical URL and a compliant User-Agent —
+  // confirmed on two separate real devices on two separate networks. CARTO's
+  // basemap tiles are free, keyless, OSM-derived, and meant for exactly this
+  // kind of embedding. https://operations.osmfoundation.org/policies/tiles/
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
     attribution:
-      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
+      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20,
   }).addTo(_map);
 
   // Start centred on Sean Wall Monument at street level — matches Android setupMap()

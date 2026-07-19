@@ -3,7 +3,7 @@
  *
  * Strategies:
  *  - App shell (HTML/CSS/JS/images): cache-first, network fallback
- *  - OSM map tiles: stale-while-revalidate, capped at MAX_TILE_ENTRIES
+ *  - Map tiles (CARTO / OSM): stale-while-revalidate, capped at MAX_TILE_ENTRIES
  *  - OSRM routing API: network-only (fallback handled in routing.js)
  *
  * Bump CACHE_VERSION to force all clients to download a fresh app shell.
@@ -69,8 +69,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // OSM tile requests — stale-while-revalidate with size cap
-  if (url.hostname.endsWith('tile.openstreetmap.org')) {
+  // Map tile requests — stale-while-revalidate with size cap
+  if (url.hostname.endsWith('tile.openstreetmap.org') || url.hostname.endsWith('basemaps.cartocdn.com')) {
     event.respondWith(handleTile(event.request));
     return;
   }
