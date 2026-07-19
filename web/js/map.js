@@ -34,10 +34,14 @@ export function initMap(elementId, onFollowChange = null) {
 
   _map = L.map(elementId, { zoomControl: true });
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // OSM's tile usage policy requires the canonical single-host URL (no {s}.
+  // subdomain sharding — those "may be slower or withdrawn without notice"),
+  // browsers already send a real, identifiable User-Agent automatically per
+  // the policy. https://operations.osmfoundation.org/policies/tiles/
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution:
       '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 20,
+    maxZoom: 19,
   }).addTo(_map);
 
   // Start centred on Sean Wall Monument at street level — matches Android setupMap()

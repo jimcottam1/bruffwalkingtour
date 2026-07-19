@@ -131,10 +131,11 @@ class MainActivity : AppCompatActivity() {
         }
         
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
-        // OSM's tile servers block requests with osmdroid's generic default User-Agent
-        // (too many apps abuse the free tile service without identifying themselves).
-        // Identify this app specifically per https://operations.osmfoundation.org/policies/tiles/
-        Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
+        // OSM's tile usage policy requires a distinct, contactable User-Agent —
+        // osmdroid's generic default (or a bare package name) gets blocked as
+        // "not identifiable". https://operations.osmfoundation.org/policies/tiles/
+        Configuration.getInstance().userAgentValue =
+            "BruffWalkingTour/${BuildConfig.VERSION_NAME} (+https://github.com/jimcottam1/bruffwalkingtour)"
         purgeStaleBlockedTileCache()
 
         // Reset location message preference for new session
@@ -198,6 +199,9 @@ class MainActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapview)
         mapView.setTileSource(TileSourceFactory.MAPNIK)
         mapView.setMultiTouchControls(true)
+
+        // OSM's tile usage policy requires visible attribution on the map.
+        mapView.overlays.add(org.osmdroid.views.overlay.CopyrightOverlay(this))
         
         // Disable double-tap zoom to prevent unwanted screen closing behavior
         mapView.setUseDataConnection(false) // Temporarily disable to access the gesture detector
