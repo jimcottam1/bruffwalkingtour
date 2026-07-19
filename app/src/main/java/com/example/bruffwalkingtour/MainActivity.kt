@@ -25,6 +25,8 @@ import androidx.lifecycle.Observer
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
@@ -60,6 +62,10 @@ class MainActivity : AppCompatActivity() {
         private const val BOUNDARY_WIDTH_KM = 1.5  // 1.5km wide (east-west)
         private const val BOUNDARY_HEIGHT_KM = 3.0 // 3km long (north-south)
 
+        // How long the "outside Bruff" gate message stays up before automatically
+        // returning to the intro screen, rather than leaving the user stuck on it.
+        private const val GATE_OUTSIDE_RETURN_DELAY_MS = 6000L
+
         // OSM's raw tile.openstreetmap.org still blocked this app's traffic even
         // after switching to the canonical URL and a proper, contactable
         // User-Agent — confirmed on two separate real devices on two separate
@@ -87,6 +93,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navigationInstructionText: TextView
     private lateinit var distanceInfoText: TextView
     private lateinit var gpsAccuracyText: TextView
+    private lateinit var boundaryGateOverlay: View
+    private lateinit var gateStatusText: TextView
+    private lateinit var gateDistanceText: TextView
+    private lateinit var startTourButton: Button
+    private var tourStarted = false
+    private var returnToIntroJob: Job? = null
     private var currentTour: WalkingTour? = null
     private var waypointMarkers = mutableListOf<Marker>()
     private var routePolylines = mutableListOf<Polyline>()
@@ -157,25 +169,37 @@ class MainActivity : AppCompatActivity() {
             "BruffWalkingTour/${BuildConfig.VERSION_NAME} (+https://github.com/jimcottam1/bruffwalkingtour)"
         purgeStaleBlockedTileCache()
 
-        // Reset location message preference for new session
-        getSharedPreferences("bruff_tour_prefs", MODE_PRIVATE)
-            .edit().putBoolean("outside_tour_area_message_shown", false).apply()
-        
         setContentView(R.layout.activity_main)
-        
+
         // Simple startup confirmation
         LogUtils.d("BruffTour", "MainActivity started successfully")
-        
+
         LogUtils.d("MainActivity", "Setting up views, map, and services...")
         setupViews()
         setupMap()
         setupLocationService()
         setupRouteService()
-        LogUtils.d("MainActivity", "About to load tour...")
-        loadTour()
-        addTourBoundaryToMap()
+        // The map/tour itself is loaded lazily by startTour(), once the user
+        // confirms they're inside the boundary via the gate overlay's button.
         requestLocationPermissions()
         LogUtils.d("MainActivity", "onCreate completed")
+    }
+
+    /**
+     * Dismisses the boundary gate and loads the live map/tour. Called either when
+     * the user taps "Start Tour" while inside the boundary, or as a degraded-mode
+     * fallback if location permission is denied (see handleLocationPermissionDenied).
+     */
+    private fun startTour() {
+        if (tourStarted) return
+        tourStarted = true
+        returnToIntroJob?.cancel()
+        returnToIntroJob = null
+        boundaryGateOverlay.visibility = View.GONE
+        mapView.visibility = View.VISIBLE
+        LogUtils.d("MainActivity", "Starting tour — loading map and route data")
+        loadTour()
+        addTourBoundaryToMap()
     }
     
     /**
@@ -209,13 +233,22 @@ class MainActivity : AppCompatActivity() {
         navigationInstructionText = findViewById(R.id.navigation_instruction)
         distanceInfoText = findViewById(R.id.distance_info)
         gpsAccuracyText = findViewById(R.id.gps_accuracy)
+        boundaryGateOverlay = findViewById(R.id.boundary_gate_overlay)
+        gateStatusText = findViewById(R.id.gate_status_text)
+        gateDistanceText = findViewById(R.id.gate_distance_text)
+        startTourButton = findViewById(R.id.start_tour_button)
 
         // Enable clickable links in navigation text
         navigationInstructionText.movementMethod = LinkMovementMethod.getInstance()
+
+        startTourButton.setOnClickListener { startTour() }
     }
     
     private fun setupMap() {
         mapView = findViewById(R.id.mapview)
+        // Kept hidden (and no tour/route data loaded) until startTour() runs,
+        // so nothing is drawn or fetched while the user is outside the boundary.
+        mapView.visibility = View.GONE
         mapView.setTileSource(CARTO_POSITRON)
         mapView.setMultiTouchControls(true)
 
@@ -319,11 +352,9 @@ class MainActivity : AppCompatActivity() {
         })
         
         locationService.outsideTourArea.observe(this, Observer { guidanceMessage ->
-            guidanceMessage?.let { message ->
-                showTourAreaGuidanceMessage(message)
-            }
+            updateGateState(guidanceMessage)
         })
-        
+
     }
     
     private fun loadTour() {
@@ -677,17 +708,49 @@ class MainActivity : AppCompatActivity() {
         mapView.controller.animateTo(geoPoint, 17.5, 1000L)
     }
     
-    private fun showTourAreaGuidanceMessage(message: String) {
-        // Only show the message once per session to avoid spam
-        val sharedPrefs = getSharedPreferences("bruff_tour_prefs", MODE_PRIVATE)
-        val messageShown = sharedPrefs.getBoolean("outside_tour_area_message_shown", false)
-        
-        if (!messageShown) {
-            Toast.makeText(this, "📍 $message", Toast.LENGTH_LONG).show()
-            
-            // Mark message as shown for this session
-            sharedPrefs.edit().putBoolean("outside_tour_area_message_shown", true).apply()
+    /**
+     * Drives the boundary gate overlay: shown until the user confirms they're
+     * inside the tour area and taps Start. Called on every accepted GPS fix.
+     */
+    private fun updateGateState(outsideMessage: String?) {
+        if (tourStarted) return // gate already dismissed
+
+        if (outsideMessage == null) {
+            returnToIntroJob?.cancel()
+            returnToIntroJob = null
+            gateStatusText.text = getString(R.string.gate_ready)
+            gateDistanceText.text = ""
+            startTourButton.visibility = View.VISIBLE
+        } else {
+            gateStatusText.text = getString(R.string.outside_bruff_message)
+            startTourButton.visibility = View.GONE
+            currentLocation?.let { location ->
+                val distance = locationService.calculateDistance(
+                    location.latitude, location.longitude,
+                    SEAN_WALL_CENTER_LAT, SEAN_WALL_CENTER_LON
+                )
+                val distanceText = if (distance < 1000) {
+                    "${distance.toInt()}m"
+                } else {
+                    "${String.format("%.1f", distance / 1000)}km"
+                }
+                gateDistanceText.text = getString(R.string.gate_distance_away, distanceText)
+            }
+
+            // Don't leave the user stuck on the gate — bounce back to the intro
+            // screen after a few seconds if they're still outside the area.
+            if (returnToIntroJob == null) {
+                returnToIntroJob = lifecycleScope.launch {
+                    delay(GATE_OUTSIDE_RETURN_DELAY_MS)
+                    returnToIntro()
+                }
+            }
         }
+    }
+
+    private fun returnToIntro() {
+        startActivity(Intent(this, IntroActivity::class.java))
+        finish()
     }
     
     private fun showWaypointDetails(waypoint: TourWaypoint) {
@@ -716,7 +779,9 @@ class MainActivity : AppCompatActivity() {
                 openAppSettings()
             }
             .setNegativeButton(getString(R.string.continue_anyway)) { _, _ ->
-                // Continue without location
+                // Without location we can't confirm the user is in the boundary —
+                // bypass the gate directly rather than leaving them stuck on it.
+                startTour()
             }
             .show()
     }

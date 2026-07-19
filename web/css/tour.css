@@ -57,6 +57,42 @@ html, body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Boundary gate — full-screen, shown until the user is confirmed inside the
+   tour area and taps Start. Sits above the map so nothing beneath is visible
+   or loaded (no tiles, no route fetches) while gated. */
+#boundary-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+
+#gate-status {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+  max-width: 320px;
+  white-space: pre-line;
+}
+
+#gate-distance {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+#boundary-gate .cta-btn {
+  width: auto;
+  padding: 14px 32px;
+  margin-top: 24px;
+}
+
 /* Boundary warning — top of screen */
 #boundary-warning {
   position: fixed;

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { stubMapModule, injectGeoMock } from './helpers.js';
+import { stubMapModule, injectGeoMock, startTourAt } from './helpers.js';
 import { WAYPOINTS } from '../../js/data.js';
 
 /**
@@ -21,12 +21,17 @@ test.describe('full tour walkthrough — visits all 4 waypoints in order', () =>
     for (let i = 0; i < WAYPOINTS.length; i++) {
       const wp = WAYPOINTS[i];
       const isLast = i === WAYPOINTS.length - 1;
+      const approachFix = { lat: wp.latitude + 0.01, lon: wp.longitude }; // ~1.1km away, still inside boundary
 
-      // Before arrival, navigation instruction should reference this waypoint by name
-      await page.evaluate(
-        ({ lat, lon }) => window.simulatePosition(lat, lon),
-        { lat: wp.latitude + 0.01, lon: wp.longitude }, // ~1.1km away, still inside boundary
-      );
+      if (i === 0) {
+        // First waypoint: pass through the boundary gate before anything renders
+        await startTourAt(page, approachFix);
+      } else {
+        // Returning to tour.html between waypoints — the gate is skipped
+        // automatically (already passed once this tour), so a plain GPS fix
+        // is enough to update the nav instruction.
+        await page.evaluate(({ lat, lon }) => window.simulatePosition(lat, lon), approachFix);
+      }
       await expect(page.locator('#navigation-instruction')).toContainText(wp.name);
 
       // Walk right up to the waypoint's exact coordinates — well within its proximityRadius

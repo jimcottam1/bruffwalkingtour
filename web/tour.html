@@ -7,6 +7,7 @@
   <title>Bruff Heritage Trail &mdash; Map</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/pages.css">
   <link rel="stylesheet" href="css/tour.css">
   <!-- Leaflet CSS (also cached by service worker for offline use) -->
   <link rel="stylesheet"
@@ -16,6 +17,14 @@
 </head>
 <body>
   <div id="map" role="application" aria-label="Walking tour map"></div>
+
+  <!-- Boundary gate — shown until the user confirms they're inside the tour
+       area. The map/route/navigation below stay dormant until dismissed. -->
+  <div id="boundary-gate">
+    <div id="gate-status">Locating you&hellip;</div>
+    <div id="gate-distance"></div>
+    <button id="start-tour-btn" class="cta-btn" hidden>Start Tour</button>
+  </div>
 
   <!-- Outside-boundary warning (hidden by default) -->
   <div id="boundary-warning" role="alert" hidden>

@@ -73,6 +73,16 @@ export async function injectGeoMock(page) {
 }
 
 /**
+ * Fire a GPS fix inside the tour boundary and dismiss the boundary gate by
+ * clicking Start Tour, landing the page in "live tour" mode. Must be called
+ * after page.goto('/tour.html').
+ */
+export async function startTourAt(page, coords) {
+  await page.evaluate(({ lat, lon }) => window.simulatePosition(lat, lon), coords);
+  await page.locator('#start-tour-btn').click();
+}
+
+/**
  * Seed sessionStorage before the first page load.
  * Must be called before page.goto().
  * Uses a one-shot sentinel so the init script does NOT fire again if the

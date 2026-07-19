@@ -87,6 +87,7 @@
     // Clear any previous session so the tour always starts fresh from the intro
     document.getElementById('start-btn').addEventListener('click', () => {
       sessionStorage.removeItem('bruff_tour_state');
+      sessionStorage.removeItem('bruff_gate_passed');
     });
   </script>
 </body>

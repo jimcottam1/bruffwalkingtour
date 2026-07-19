@@ -13,6 +13,10 @@
     
     <!-- Location outside Bruff -->
     <string name="outside_bruff_message">📍 You appear to be outside Bruff town area.\n\nPlease start the application after you are in the main street for the best tour experience!</string>
+    <string name="gate_locating">Locating you…</string>
+    <string name="gate_ready">You\'re in Bruff — ready to start!</string>
+    <string name="start_tour_button">Start Tour</string>
+    <string name="gate_distance_away">%s away from Bruff town centre</string>
     
     <!-- Navigation -->
     <string name="arrived_at_waypoint">🎯 Arrived at %s!</string>
