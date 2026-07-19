@@ -74,14 +74,21 @@ class MainActivity : AppCompatActivity() {
         // basemap tiles are free, keyless, OSM-derived, and meant for exactly
         // this kind of embedding — see https://operations.osmfoundation.org/policies/tiles/
         // for why raw OSM tiles are not recommended for app distribution.
-        private val CARTO_POSITRON = org.osmdroid.tileprovider.tilesource.XYTileSource(
-            "CartoPositron",
-            0, 20, 256, ".png",
+        //
+        // Voyager (not the more muted Positron style) for visible road/building/
+        // park contrast, and @2x retina tiles for sharpness — the tile grid is
+        // still indexed on the standard 256px logical size (matches slippy-map
+        // z/x/y math), osmdroid just downscale-renders the higher-res source
+        // image into that same on-screen box, which is what makes it look sharper
+        // rather than simply bigger.
+        private val CARTO_VOYAGER = org.osmdroid.tileprovider.tilesource.XYTileSource(
+            "CartoVoyager",
+            0, 20, 256, "@2x.png",
             arrayOf(
-                "https://a.basemaps.cartocdn.com/light_all/",
-                "https://b.basemaps.cartocdn.com/light_all/",
-                "https://c.basemaps.cartocdn.com/light_all/",
-                "https://d.basemaps.cartocdn.com/light_all/"
+                "https://a.basemaps.cartocdn.com/rastertiles/voyager/",
+                "https://b.basemaps.cartocdn.com/rastertiles/voyager/",
+                "https://c.basemaps.cartocdn.com/rastertiles/voyager/",
+                "https://d.basemaps.cartocdn.com/rastertiles/voyager/"
             ),
             "© OpenStreetMap contributors © CARTO"
         )
@@ -249,7 +256,7 @@ class MainActivity : AppCompatActivity() {
         // Kept hidden (and no tour/route data loaded) until startTour() runs,
         // so nothing is drawn or fetched while the user is outside the boundary.
         mapView.visibility = View.GONE
-        mapView.setTileSource(CARTO_POSITRON)
+        mapView.setTileSource(CARTO_VOYAGER)
         mapView.setMultiTouchControls(true)
 
         // OSM's tile usage policy requires visible attribution on the map.

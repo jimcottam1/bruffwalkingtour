@@ -39,7 +39,14 @@ export function initMap(elementId, onFollowChange = null) {
   // confirmed on two separate real devices on two separate networks. CARTO's
   // basemap tiles are free, keyless, OSM-derived, and meant for exactly this
   // kind of embedding. https://operations.osmfoundation.org/policies/tiles/
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+  //
+  // Voyager (not the more muted Positron style) for visible road/building/park
+  // contrast. The {r} token resolves to '@2x' on retina displays (based on
+  // Browser.retina) and CARTO serves genuine higher-resolution tiles at that
+  // URL — deliberately NOT using the separate detectRetina option, which
+  // instead fetches a deeper zoom level and halves tileSize as a fallback for
+  // servers without native @2x tiles; combining both would double up wrongly.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution:
       '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
