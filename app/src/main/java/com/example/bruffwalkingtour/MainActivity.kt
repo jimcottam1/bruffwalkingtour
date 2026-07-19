@@ -66,6 +66,10 @@ class MainActivity : AppCompatActivity() {
         // returning to the intro screen, rather than leaving the user stuck on it.
         private const val GATE_OUTSIDE_RETURN_DELAY_MS = 6000L
 
+        // Only re-fetch the user's live route to the current waypoint once they've
+        // moved this far since the last fetch — matches web's ROUTE_REFRESH_THRESHOLD_M.
+        private const val USER_ROUTE_REFRESH_THRESHOLD_M = 20f
+
         // OSM's raw tile.openstreetmap.org still blocked this app's traffic even
         // after switching to the canonical URL and a proper, contactable
         // User-Agent — confirmed on two separate real devices on two separate
@@ -109,6 +113,8 @@ class MainActivity : AppCompatActivity() {
     private var currentTour: WalkingTour? = null
     private var waypointMarkers = mutableListOf<Marker>()
     private var routePolylines = mutableListOf<Polyline>()
+    private var userToWaypointPolyline: Polyline? = null
+    private var lastUserRouteLocation: Location? = null
     private var myLocationOverlay: MyLocationNewOverlay? = null
     private var tourBoundaryOverlay: Polygon? = null
     private var currentLocation: Location? = null
@@ -149,6 +155,9 @@ class MainActivity : AppCompatActivity() {
             } else {
                 currentLocation?.let { location ->
                     updateNavigationInstructions(location)
+                    // New target waypoint — refresh the live route immediately
+                    // rather than waiting for 20m of movement toward it.
+                    refreshUserRouteIfNeeded(location, force = true)
                 }
                 updateAllWaypointMarkers()
             }
@@ -211,8 +220,63 @@ class MainActivity : AppCompatActivity() {
         LogUtils.d("MainActivity", "Starting tour — loading map and route data")
         loadTour()
         addTourBoundaryToMap()
+        // Draw the route from wherever the user actually is (e.g. a car park)
+        // to the first waypoint immediately, rather than waiting for the next
+        // GPS fix or 20m of movement.
+        currentLocation?.let { refreshUserRouteIfNeeded(it, force = true) }
     }
-    
+
+    /**
+     * Fetches and draws a live road route from the user's current position to
+     * their current target waypoint — separate from the static trail-between-
+     * waypoints line drawn by drawRouteOnMap()/drawRoutesAsync(). This is what
+     * actually guides someone from e.g. a car park to the tour's start, or from
+     * one waypoint on to the next. Mirrors web's app.js renderLiveUpdate().
+     */
+    private fun refreshUserRouteIfNeeded(location: Location, force: Boolean = false) {
+        if (!tourStarted) return
+        val waypoint = locationService.getCurrentWaypoint() ?: return
+
+        if (!force) {
+            val movedSinceLastFetch = lastUserRouteLocation?.let { last ->
+                locationService.calculateDistance(
+                    last.latitude, last.longitude,
+                    location.latitude, location.longitude
+                )
+            } ?: Float.MAX_VALUE
+            if (movedSinceLastFetch < USER_ROUTE_REFRESH_THRESHOLD_M) return
+        }
+        lastUserRouteLocation = location
+
+        val start = GeoPoint(location.latitude, location.longitude)
+        val end = GeoPoint(waypoint.latitude, waypoint.longitude)
+        lifecycleScope.launch {
+            try {
+                val points = withContext(Dispatchers.IO) {
+                    routeService.getRoadBasedRoute(start, end)
+                }
+                drawUserToWaypointRoute(points)
+            } catch (e: Exception) {
+                LogUtils.w("MainActivity", "User route fetch failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun drawUserToWaypointRoute(points: List<GeoPoint>) {
+        userToWaypointPolyline?.let { mapView.overlays.remove(it) }
+        userToWaypointPolyline = Polyline().apply {
+            setPoints(points)
+            // Blue to match the "current target" waypoint marker colour, visually
+            // distinct from the static amber trail-between-waypoints line.
+            getOutlinePaint().color = Color.argb(220, 33, 150, 243)
+            getOutlinePaint().strokeWidth = 8.0f
+            getOutlinePaint().strokeCap = android.graphics.Paint.Cap.ROUND
+            getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
+        }
+        mapView.overlays.add(userToWaypointPolyline)
+        mapView.invalidate()
+    }
+
     /**
      * One-time cleanup for installs that ran before the userAgentValue fix above:
      * OSM's tile-blocked response is a real 200 OK image, so osmdroid cached it to
@@ -320,6 +384,7 @@ class MainActivity : AppCompatActivity() {
             updateMapCenter(location)
             updateNavigationInstructions(location)
             updateAllWaypointMarkers()
+            refreshUserRouteIfNeeded(location)
         })
 
         locationService.locationAccuracy.observe(this, Observer { accuracy ->
