@@ -58,7 +58,11 @@ class IntroActivity : AppCompatActivity() {
         
         spannableString.setSpan(clickableSpan, 0, fullText.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         startTourTextView.text = spannableString
-        
+
+        findViewById<TextView>(R.id.help_link).setOnClickListener {
+            startActivity(Intent(this, HelpActivity::class.java))
+        }
+
         // Set up admin access via long press on the logo
         setupAdminAccess()
     }

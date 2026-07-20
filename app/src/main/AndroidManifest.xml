@@ -46,6 +46,11 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".HelpActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".TourCompletionActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

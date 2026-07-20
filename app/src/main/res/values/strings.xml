@@ -42,4 +42,21 @@
     <!-- Tour area -->
     <string name="bruff_tour_area">Bruff Tour Area</string>
     <string name="walking_tour_coverage_area">Walking tour coverage area (%s radius)</string>
+
+    <!-- Help screen -->
+    <string name="help_button">❓ Help</string>
+    <string name="help_title">How This Tour Works</string>
+    <string name="help_intro">Bruff Heritage Trail is a self-guided walking tour of 4 historic sites in Bruff, Co. Limerick — about 90 minutes at a relaxed pace.</string>
+    <string name="help_section_getting_started_title">Getting Started</string>
+    <string name="help_section_getting_started_body">You need to be in Bruff to begin. If you\'re not there yet, the app will show you how far away you are and automatically return to the home screen after a few seconds — just reopen the tour once you\'ve arrived.</string>
+    <string name="help_section_start_title">While You\'re in Bruff</string>
+    <string name="help_section_start_body">Once you\'re in the area, tap Start Tour. The app will show you a live route from wherever you are to the first stop.</string>
+    <string name="help_section_route_title">Following the Route</string>
+    <string name="help_section_route_body">• The blue line guides you to the very first stop.\n• Once you\'re on the trail, the gold line connects all 4 stops in order — that\'s your route for the rest of the walk.\n• The arrow and distance at the bottom of the screen always point to your next stop.</string>
+    <string name="help_section_arrival_title">Arriving at a Stop</string>
+    <string name="help_section_arrival_body">When you\'re close enough to a site, you\'ll get an arrival notification. Tap it to read about the site\'s history, then tap Continue to move on to the next stop.</string>
+    <string name="help_section_map_title">Reading the Map</string>
+    <string name="help_section_map_body">🔵 Blue, pulsing marker — your current target\n🟢 Green marker — a stop still ahead\n⚪ Grey marker with a checkmark — a stop you\'ve already visited</string>
+    <string name="help_section_tips_title">Tips</string>
+    <string name="help_section_tips_body">• Keep your phone unlocked during the walk — the screen stays on automatically while you\'re navigating.\n• The GPS badge in the corner shows your location accuracy (● good, ◑ fair, ○ low).\n• If you wander outside the Bruff area mid-walk, you\'ll get a reminder to head back.</string>
 </resources>
