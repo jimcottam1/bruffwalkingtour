@@ -25,7 +25,7 @@
         <div class="stat-label">Minutes</div>
       </div>
       <div class="stat-box">
-        <div class="stat-value">4</div>
+        <div class="stat-value" id="locations-stat">4</div>
         <div class="stat-label">Locations</div>
       </div>
       <div class="stat-box">
@@ -35,36 +35,7 @@
     </div>
 
     <p class="section-title">Tour Highlights</p>
-    <ul class="highlight-list">
-      <li class="highlight-item">
-        <div class="highlight-num" aria-hidden="true">1</div>
-        <div>
-          <div class="highlight-name">Thomas Fitzgerald Centre</div>
-          <div class="highlight-desc">JFK family heritage &amp; former courthouse, 1926</div>
-        </div>
-      </li>
-      <li class="highlight-item">
-        <div class="highlight-num" aria-hidden="true">2</div>
-        <div>
-          <div class="highlight-name">Saints Peter &amp; Paul Church</div>
-          <div class="highlight-desc">Gothic Revival, built 1828&ndash;1833</div>
-        </div>
-      </li>
-      <li class="highlight-item">
-        <div class="highlight-num" aria-hidden="true">3</div>
-        <div>
-          <div class="highlight-name">Sean Wall Monument</div>
-          <div class="highlight-desc">Portland stone memorial, unveiled 1952</div>
-        </div>
-      </li>
-      <li class="highlight-item">
-        <div class="highlight-num" aria-hidden="true">4</div>
-        <div>
-          <div class="highlight-name">Bruff GAA Grounds</div>
-          <div class="highlight-desc">One of Ireland&rsquo;s oldest GAA clubs, founded 1887</div>
-        </div>
-      </li>
-    </ul>
+    <ul class="highlight-list" id="highlight-list"></ul>
 
     <p class="section-title" style="margin-top:20px;">Getting Started</p>
     <p style="font-size:0.85rem;color:var(--color-text-muted);margin-bottom:4px;">
@@ -80,6 +51,36 @@
     </a>
   </main>
 
+  <script type="module">
+    import { WAYPOINTS } from './js/data.js';
+
+    document.getElementById('locations-stat').textContent = WAYPOINTS.length;
+
+    const highlightList = document.getElementById('highlight-list');
+    WAYPOINTS.forEach((wp, index) => {
+      const li = document.createElement('li');
+      li.className = 'highlight-item';
+
+      const num = document.createElement('div');
+      num.className = 'highlight-num';
+      num.setAttribute('aria-hidden', 'true');
+      num.textContent = index + 1;
+
+      const textWrap = document.createElement('div');
+
+      const name = document.createElement('div');
+      name.className = 'highlight-name';
+      name.textContent = wp.name;
+
+      const desc = document.createElement('div');
+      desc.className = 'highlight-desc';
+      desc.textContent = wp.description;
+
+      textWrap.append(name, desc);
+      li.append(num, textWrap);
+      highlightList.appendChild(li);
+    });
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});

@@ -69,6 +69,20 @@ class BoundaryDetectionTest {
             isOutsideBoundary(52.476002, -8.541206))
     }
 
+    @Test
+    fun everyTourWaypoint_isInsideBoundary() {
+        // Generic check over the real, live waypoint list — catches a newly
+        // added waypoint placed outside the geo-fence, which would otherwise
+        // silently never trigger proximity detection.
+        val waypoints = BruffTourData.getDefaultTour().waypoints
+        for (waypoint in waypoints) {
+            assertFalse(
+                "${waypoint.name} (${waypoint.latitude}, ${waypoint.longitude}) should be inside boundary",
+                isOutsideBoundary(waypoint.latitude, waypoint.longitude)
+            )
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Outside — each cardinal direction
     // -----------------------------------------------------------------------

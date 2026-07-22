@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bruff Tour — Waypoints Admin (local only)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Bruff Heritage Trail — Waypoints</h1>
+    <div class="topbar-actions">
+      <span id="status" class="status"></span>
+      <button id="save-btn" class="btn btn-primary">Save &amp; regenerate</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span>Tour order</span>
+        <button id="add-btn" class="btn btn-small">+ Add</button>
+      </div>
+      <ul id="waypoint-list" class="waypoint-list"></ul>
+    </aside>
+
+    <section class="editor">
+      <div id="map" class="map"></div>
+
+      <form id="waypoint-form" class="form">
+        <p class="hint">Click or drag a marker on the map to set its position.</p>
+
+        <label>ID
+          <input type="text" id="f-id" pattern="[a-z0-9_]+" required>
+        </label>
+
+        <label>Name
+          <input type="text" id="f-name" required>
+        </label>
+
+        <div class="row">
+          <label>Latitude
+            <input type="number" id="f-lat" step="0.000001" required>
+          </label>
+          <label>Longitude
+            <input type="number" id="f-lon" step="0.000001" required>
+          </label>
+          <label>Proximity radius (m)
+            <input type="number" id="f-radius" min="1" step="1" required>
+          </label>
+        </div>
+
+        <label>Description (short, shown in highlight lists)
+          <textarea id="f-description" rows="3" required></textarea>
+        </label>
+
+        <label>Historical info (long, shown on the detail screen)
+          <textarea id="f-historical" rows="8" required></textarea>
+        </label>
+
+        <label>Image URL
+          <input type="text" id="f-image-url">
+        </label>
+
+        <label>Local image path (optional, e.g. assets/images/foo.jpg)
+          <input type="text" id="f-local-image">
+        </label>
+
+        <button type="button" id="delete-btn" class="btn btn-danger">Delete this waypoint</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

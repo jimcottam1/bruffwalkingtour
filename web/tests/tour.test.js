@@ -18,6 +18,13 @@ beforeEach(() => {
   tour = new TourController(WAYPOINTS, storage);
 });
 
+/** Advances the current `tour` through every waypoint, completing it. */
+function completeTour() {
+  for (let i = 0; i < WAYPOINTS.length; i++) {
+    tour.markCurrentVisited();
+  }
+}
+
 // ---- Initial state ---------------------------------------------------------
 
 describe('initial state', () => {
@@ -34,7 +41,7 @@ describe('initial state', () => {
   });
 
   it('has 4 waypoints', () => {
-    expect(tour.getWaypointCount()).toBe(4);
+    expect(tour.getWaypointCount()).toBe(WAYPOINTS.length);
   });
 
   it('no waypoints are visited', () => {
@@ -66,19 +73,19 @@ describe('markCurrentVisited', () => {
     expect(tour.isComplete()).toBe(false);
   });
 
-  it('completing all 4 waypoints sets isComplete() to true', () => {
-    tour.markCurrentVisited(); // 0→1
-    tour.markCurrentVisited(); // 1→2
-    tour.markCurrentVisited(); // 2→3
+  it('completing all waypoints sets isComplete() to true', () => {
+    for (let i = 0; i < WAYPOINTS.length - 1; i++) {
+      tour.markCurrentVisited();
+    }
     expect(tour.isComplete()).toBe(false);
-    tour.markCurrentVisited(); // 3→4  (complete)
+    tour.markCurrentVisited(); // final advance — complete
     expect(tour.isComplete()).toBe(true);
   });
 
   it('returns true when tour becomes complete', () => {
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
+    for (let i = 0; i < WAYPOINTS.length - 1; i++) {
+      tour.markCurrentVisited();
+    }
     expect(tour.markCurrentVisited()).toBe(true);
   });
 
@@ -87,20 +94,16 @@ describe('markCurrentVisited', () => {
   });
 
   it('is idempotent when already complete — does not advance past length', () => {
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited(); // complete, index = 4
-    tour.markCurrentVisited(); // extra call — should not advance to 5
-    expect(tour.getCurrentIndex()).toBe(4);
+    for (let i = 0; i < WAYPOINTS.length; i++) {
+      tour.markCurrentVisited();
+    }
+    tour.markCurrentVisited(); // extra call — should not advance past length
+    expect(tour.getCurrentIndex()).toBe(WAYPOINTS.length);
     expect(tour.isComplete()).toBe(true);
   });
 
   it('getCurrentWaypoint returns null when complete', () => {
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
+    completeTour();
     expect(tour.getCurrentWaypoint()).toBeNull();
   });
 });
@@ -137,11 +140,8 @@ describe('checkProximity', () => {
   });
 
   it('returns null when tour is complete', () => {
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    const wp = WAYPOINTS[3];
+    completeTour();
+    const wp = WAYPOINTS[WAYPOINTS.length - 1];
     expect(tour.checkProximity(wp.latitude, wp.longitude)).toBeNull();
   });
 
@@ -189,10 +189,7 @@ describe('reset', () => {
   });
 
   it('tour is no longer complete after reset', () => {
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited(); // complete
+    completeTour();
     tour.reset();
     expect(tour.isComplete()).toBe(false);
   });
@@ -235,10 +232,7 @@ describe('getDistanceToCurrent', () => {
   });
 
   it('returns null when tour is complete', () => {
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
-    tour.markCurrentVisited();
+    completeTour();
     expect(tour.getDistanceToCurrent(52.477, -8.548)).toBeNull();
   });
 

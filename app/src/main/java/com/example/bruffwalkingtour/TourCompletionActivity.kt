@@ -6,7 +6,9 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -38,7 +40,9 @@ class TourCompletionActivity : AppCompatActivity() {
     
     private fun setupViews() {
         supportActionBar?.hide()
-        
+
+        populateSummary()
+
         val actionsTextView = findViewById<TextView>(R.id.tour_completion_actions)
         actionsTextView.movementMethod = LinkMovementMethod.getInstance()
         
@@ -71,5 +75,20 @@ class TourCompletionActivity : AppCompatActivity() {
         }
         
         actionsTextView.text = spannableString
+    }
+
+    private fun populateSummary() {
+        val waypoints = BruffTourData.getDefaultTour().waypoints
+
+        findViewById<TextView>(R.id.locations_visited_text).text =
+            "✅\n${waypoints.size} locations\nvisited"
+
+        val container = findViewById<LinearLayout>(R.id.completed_container)
+        val inflater = LayoutInflater.from(this)
+        waypoints.forEach { waypoint ->
+            val item = inflater.inflate(R.layout.list_item_completed, container, false)
+            item.findViewById<TextView>(R.id.completed_name).text = waypoint.name
+            container.addView(item)
+        }
     }
 }

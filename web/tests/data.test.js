@@ -7,10 +7,11 @@ import {
   getWaypointById,
   getDefaultTour,
 } from '../js/data.js';
+import { isOutsideBoundary } from '../js/utils.js';
 
 describe('WAYPOINTS', () => {
-  it('has exactly 4 waypoints', () => {
-    expect(WAYPOINTS).toHaveLength(4);
+  it('has at least one waypoint', () => {
+    expect(WAYPOINTS.length).toBeGreaterThan(0);
   });
 
   it('all waypoints have required fields', () => {
@@ -83,6 +84,15 @@ describe('BOUNDARY', () => {
     expect(BOUNDARY.WIDTH_KM).toBe(1.5);
     expect(BOUNDARY.HEIGHT_KM).toBe(3.0);
   });
+
+  it('contains every waypoint (a mis-placed new waypoint would never trigger proximity)', () => {
+    for (const wp of WAYPOINTS) {
+      expect(
+        isOutsideBoundary(wp.latitude, wp.longitude),
+        `${wp.id} (${wp.latitude}, ${wp.longitude}) falls outside the tour boundary`
+      ).toBe(false);
+    }
+  });
 });
 
 describe('TOUR metadata', () => {
@@ -109,7 +119,7 @@ describe('WALKING_SPEED_MPM', () => {
 describe('getDefaultTour', () => {
   it('includes waypoints in the returned tour object', () => {
     const tour = getDefaultTour();
-    expect(tour.waypoints).toHaveLength(4);
+    expect(tour.waypoints).toHaveLength(WAYPOINTS.length);
   });
 
   it('returns a new object each call (not shared reference)', () => {

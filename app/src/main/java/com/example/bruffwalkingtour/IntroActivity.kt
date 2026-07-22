@@ -6,7 +6,9 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -63,8 +65,27 @@ class IntroActivity : AppCompatActivity() {
             startActivity(Intent(this, HelpActivity::class.java))
         }
 
+        populateHighlights()
+
         // Set up admin access via long press on the logo
         setupAdminAccess()
+    }
+
+    private fun populateHighlights() {
+        val waypoints = BruffTourData.getDefaultTour().waypoints
+
+        findViewById<TextView>(R.id.locations_count_text).text =
+            "📍\n${waypoints.size} locations"
+
+        val container = findViewById<LinearLayout>(R.id.highlights_container)
+        val inflater = LayoutInflater.from(this)
+        waypoints.forEachIndexed { index, waypoint ->
+            val item = inflater.inflate(R.layout.list_item_highlight, container, false)
+            item.findViewById<TextView>(R.id.highlight_number).text = (index + 1).toString()
+            item.findViewById<TextView>(R.id.highlight_name).text = waypoint.name
+            item.findViewById<TextView>(R.id.highlight_desc).text = waypoint.description
+            container.addView(item)
+        }
     }
     
     private fun setupAdminAccess() {

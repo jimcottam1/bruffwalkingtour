@@ -1,0 +1,206 @@
+:root {
+  color-scheme: light dark;
+  --border: #d5d5d5;
+  --bg-alt: #f4f4f4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1a1a1a;
+  background: #fff;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status {
+  font-size: 0.85rem;
+  min-width: 200px;
+  text-align: right;
+}
+
+.status.ok { color: #1a7f37; }
+.status.err { color: #c62828; }
+
+.btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn:hover { background: var(--bg-alt); }
+
+.btn-small { padding: 3px 8px; font-size: 0.8rem; }
+
+.btn-primary {
+  background: #c8922a;
+  border-color: #c8922a;
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover { background: #b3801f; }
+
+.btn-danger {
+  color: #c62828;
+  border-color: #c62828;
+}
+
+.btn-danger:hover { background: #fdecea; }
+
+.layout {
+  display: flex;
+  height: calc(100vh - 49px);
+}
+
+.sidebar {
+  width: 260px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 1px solid var(--border);
+}
+
+.waypoint-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.waypoint-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.waypoint-item:hover { background: var(--bg-alt); }
+
+.waypoint-item.selected {
+  background: #fdf3e3;
+  border-left: 3px solid #c8922a;
+}
+
+.waypoint-item .num {
+  font-size: 0.75rem;
+  color: #999;
+  min-width: 16px;
+}
+
+.waypoint-item .name {
+  flex: 1;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.waypoint-item .reorder {
+  display: flex;
+  flex-direction: column;
+}
+
+.waypoint-item .reorder button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 1px 3px;
+  color: #666;
+}
+
+.waypoint-item .reorder button:hover { color: #000; }
+
+.editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.map {
+  height: 40%;
+  min-height: 220px;
+}
+
+.form {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form .hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form input,
+.form textarea {
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 400;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.form .row {
+  display: flex;
+  gap: 12px;
+}
+
+.form .row label { flex: 1; }
+
+#delete-btn {
+  align-self: flex-start;
+  margin-top: 6px;
+}

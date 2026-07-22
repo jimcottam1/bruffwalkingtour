@@ -36,9 +36,9 @@ class BruffTourDataTest {
     }
 
     @Test
-    fun getDefaultTour_returnsFourWaypoints() {
+    fun getDefaultTour_hasAtLeastOneWaypoint() {
         val tour = BruffTourData.getDefaultTour()
-        assertEquals(4, tour.waypoints.size)
+        assertTrue("Tour should have at least one waypoint", tour.waypoints.isNotEmpty())
     }
 
     @Test
@@ -46,14 +46,12 @@ class BruffTourDataTest {
         val tour = BruffTourData.getDefaultTour()
         val expectedIds = listOf(
             "thomas_fitzgerald_centre",
-            "bruff_catholic_church", 
+            "bruff_catholic_church",
             "sean_wall_monument",
             "bruff_gaa_grounds"
         )
-        
-        tour.waypoints.forEachIndexed { index, waypoint ->
-            assertEquals(expectedIds[index], waypoint.id)
-        }
+
+        assertEquals(expectedIds, tour.waypoints.map { it.id })
     }
 
     @Test
@@ -62,13 +60,11 @@ class BruffTourDataTest {
         val expectedNames = listOf(
             "Thomas Fitzgerald Centre",
             "Saints Peter and Paul Catholic Church",
-            "Sean Wall Monument", 
+            "Sean Wall Monument",
             "Bruff GAA Grounds"
         )
-        
-        tour.waypoints.forEachIndexed { index, waypoint ->
-            assertEquals(expectedNames[index], waypoint.name)
-        }
+
+        assertEquals(expectedNames, tour.waypoints.map { it.name })
     }
 
     @Test

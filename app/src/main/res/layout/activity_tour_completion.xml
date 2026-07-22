@@ -49,6 +49,7 @@
             android:gravity="center">
 
             <TextView
+                android:id="@+id/locations_visited_text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -87,116 +88,11 @@
             android:textStyle="bold" />
 
         <LinearLayout
+            android:id="@+id/completed_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:text="✓"
-                android:background="@color/design_default_color_primary"
-                android:textColor="@android:color/white"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:minWidth="24dp"
-                android:minHeight="24dp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Thomas Fitzgerald Centre - Community heritage hub"
-                android:textColor="@android:color/black"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:text="✓"
-                android:background="@color/design_default_color_primary"
-                android:textColor="@android:color/white"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:minWidth="24dp"
-                android:minHeight="24dp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Bruff Catholic Church - Beautiful architecture"
-                android:textColor="@android:color/black"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:text="✓"
-                android:background="@color/design_default_color_primary"
-                android:textColor="@android:color/white"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:minWidth="24dp"
-                android:minHeight="24dp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Sean Wall Monument - Memorial to local heritage"
-                android:textColor="@android:color/black"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:text="✓"
-                android:background="@color/design_default_color_primary"
-                android:textColor="@android:color/white"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:minWidth="24dp"
-                android:minHeight="24dp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Bruff GAA Grounds - Heart of Gaelic sports"
-                android:textColor="@android:color/black"
-                android:textSize="14sp" />
-
-        </LinearLayout>
+            android:layout_marginBottom="24dp"
+            android:orientation="vertical" />
 
         <TextView
             android:layout_width="match_parent"
