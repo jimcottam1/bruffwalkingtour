@@ -14,7 +14,9 @@ import { BOUNDARY } from './data.js';
 
 let _map = null;
 let _userMarker = null;
+let _userMarkerHalo = null;
 let _routePolyline = null;
+let _routeHalo = null;
 const _waypointMarkers = [];
 
 let _followMode = true;
@@ -34,22 +36,16 @@ export function initMap(elementId, onFollowChange = null) {
 
   _map = L.map(elementId, { zoomControl: true });
 
-  // OSM's raw tile.openstreetmap.org still blocked this app's traffic even
-  // after switching to the canonical URL and a compliant User-Agent —
-  // confirmed on two separate real devices on two separate networks. CARTO's
-  // basemap tiles are free, keyless, OSM-derived, and meant for exactly this
-  // kind of embedding. https://operations.osmfoundation.org/policies/tiles/
-  //
-  // Voyager (not the more muted Positron style) for visible road/building/park
-  // contrast. The {r} token resolves to '@2x' on retina displays (based on
-  // Browser.retina) and CARTO serves genuine higher-resolution tiles at that
-  // URL — deliberately NOT using the separate detectRetina option, which
-  // instead fetches a deeper zoom level and halves tileSize as a fallback for
-  // servers without native @2x tiles; combining both would double up wrongly.
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Basemap history: tile.openstreetmap.org blocked this app's traffic on real
+  // devices; CARTO's keyless basemap (basemaps.cartocdn.com) then started
+  // serving an "API key required" watermark tile once an IP passed its
+  // anonymous quota. OpenStreetMap France's Humanitarian (HOT) style is
+  // keyless, a separate community deployment, and fine for light embedded use.
+  // No @2x tiles, so no {r} token. https://wiki.openstreetmap.org/wiki/OpenStreetMap_France
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     attribution:
-      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
+      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors — tiles courtesy of <a href="https://openstreetmap.fr/">OpenStreetMap France</a>',
+    subdomains: 'abc',
     maxZoom: 20,
   }).addTo(_map);
 
@@ -71,7 +67,9 @@ export function destroyMap() {
     _map.remove();
     _map = null;
     _userMarker = null;
+    _userMarkerHalo = null;
     _routePolyline = null;
+    _routeHalo = null;
     _waypointMarkers.length = 0;
     _followMode = true;
     _onFollowChange = null;
@@ -114,11 +112,12 @@ export function addWaypointMarkers(waypoints, currentIndex, visitedIds = []) {
       ? 'marker-current'
       : 'marker-future';
 
+    const size = isCurrent ? 44 : 36;
     const icon = L.divIcon({
       className: '',
       html: `<div class="waypoint-marker ${cls}">${i + 1}</div>`,
-      iconSize: [36, 36],
-      iconAnchor: [18, 18],
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
     });
 
     const marker = L.marker([wp.latitude, wp.longitude], { icon })
@@ -136,14 +135,25 @@ export function updateUserLocation(lat, lon) {
   if (!_map) return;
   if (_userMarker) {
     _userMarker.setLatLng([lat, lon]);
+    _userMarkerHalo?.setLatLng([lat, lon]);
   } else {
+    // Halo first so it renders beneath the solid dot.
+    _userMarkerHalo = L.circleMarker([lat, lon], {
+      radius: 18,
+      className: 'user-dot-halo',
+      fillColor: '#4a90d9',
+      color: 'transparent',
+      fillOpacity: 0.35,
+      interactive: false,
+    }).addTo(_map);
     _userMarker = L.circleMarker([lat, lon], {
       radius: 10,
+      className: 'user-dot',
       fillColor: '#4a90d9',
       color: '#ffffff',
-      weight: 2,
+      weight: 3,
       opacity: 1,
-      fillOpacity: 0.9,
+      fillOpacity: 0.95,
     }).addTo(_map);
   }
 }
@@ -158,12 +168,29 @@ export function drawRoute(latLonArray) {
     _routePolyline.remove();
     _routePolyline = null;
   }
+  if (_routeHalo) {
+    _routeHalo.remove();
+    _routeHalo = null;
+  }
   if (latLonArray?.length > 1) {
+    // Dark halo underneath so the route reads clearly over any basemap
+    // colour (light roads, parks, water).
+    _routeHalo = L.polyline(latLonArray, {
+      color: '#1a1208',
+      weight: 8,
+      opacity: 0.35,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: false,
+    }).addTo(_map);
     _routePolyline = L.polyline(latLonArray, {
-      color: '#c8922a',
-      weight: 4,
-      opacity: 0.8,
-      dashArray: '8, 6',
+      color: '#e8b85a',
+      weight: 5,
+      opacity: 0.95,
+      dashArray: '10, 8',
+      lineCap: 'round',
+      lineJoin: 'round',
+      className: 'route-line-flow',
     }).addTo(_map);
   }
 }

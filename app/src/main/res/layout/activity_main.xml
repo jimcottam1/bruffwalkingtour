@@ -10,7 +10,35 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <Button
+        android:id="@+id/help_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="12dp"
+        android:paddingHorizontal="12dp"
+        android:background="#CC000000"
+        android:textColor="@android:color/white"
+        android:textAllCaps="false"
+        android:text="@string/help_button" />
+
+    <Button
+        android:id="@+id/recenter_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="12dp"
+        android:paddingHorizontal="12dp"
+        android:background="#CC000000"
+        android:textColor="@android:color/white"
+        android:textAllCaps="false"
+        android:text="@string/recenter_button"
+        android:visibility="gone" />
+
     <LinearLayout
+        android:id="@+id/bottom_info_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -44,6 +72,65 @@
             android:text="GPS: locating…"
             android:textColor="#80FFFFFF"
             android:textSize="11sp" />
+
+    </LinearLayout>
+
+    <!-- Arrival card — shown the moment the user reaches a stop, sits just above
+         the navigation bar with an explicit Explore action. -->
+    <LinearLayout
+        android:id="@+id/arrival_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottom_info_bar"
+        android:layout_margin="12dp"
+        android:background="#F2FFFFFF"
+        android:elevation="8dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/arrival_card_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/arrival_card_title_default"
+            android:textColor="#1A1208"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/arrival_card_hint"
+            android:textColor="#5A4A2A"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/arrival_card_dismiss"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/arrival_card_dismiss"
+                android:textAllCaps="false"
+                android:textColor="#5A4A2A" />
+
+            <Button
+                android:id="@+id/arrival_card_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/arrival_card_explore"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -81,6 +168,17 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="@string/start_tour_button"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/gate_override_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#66FFFFFF"
+            android:text="@string/gate_start_anyway"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
             android:visibility="gone" />
 
     </LinearLayout>

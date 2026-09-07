@@ -62,39 +62,53 @@ class MainActivity : AppCompatActivity() {
         private const val BOUNDARY_WIDTH_KM = 1.5  // 1.5km wide (east-west)
         private const val BOUNDARY_HEIGHT_KM = 3.0 // 3km long (north-south)
 
-        // How long the "outside Bruff" gate message stays up before automatically
-        // returning to the intro screen, rather than leaving the user stuck on it.
-        private const val GATE_OUTSIDE_RETURN_DELAY_MS = 6000L
+        // The "outside Bruff" gate bounces the user back to the intro screen so
+        // they aren't stranded on it — but only after several consecutive
+        // outside fixes (GPS near the boundary edge is noisy) and a generous
+        // delay, and never without offering a "start here anyway" escape.
+        private const val GATE_OUTSIDE_RETURN_DELAY_MS = 12000L
+        private const val GATE_OUTSIDE_FIXES_BEFORE_RETURN = 3
 
-        // Only re-fetch the user's live route to the current waypoint once they've
-        // moved this far since the last fetch — matches web's ROUTE_REFRESH_THRESHOLD_M.
-        private const val USER_ROUTE_REFRESH_THRESHOLD_M = 20f
+        // Heads-up notification shown the moment the user reaches a stop, so the
+        // arrival isn't missed while the phone is pocketed or pointed at the site.
+        private const val ARRIVAL_CHANNEL_ID = "stop_arrivals"
+        private const val ARRIVAL_NOTIFICATION_ID = 1001
 
-        // OSM's raw tile.openstreetmap.org still blocked this app's traffic even
-        // after switching to the canonical URL and a proper, contactable
-        // User-Agent — confirmed on two separate real devices on two separate
-        // networks. Likely fingerprinting the underlying HTTP client rather than
-        // the app-level identity, which is outside this app's control. CARTO's
-        // basemap tiles are free, keyless, OSM-derived, and meant for exactly
-        // this kind of embedding — see https://operations.osmfoundation.org/policies/tiles/
-        // for why raw OSM tiles are not recommended for app distribution.
+        // A saved tour is resumed silently only if the app was used this
+        // recently — covers "the OS killed the screen while I read a stop".
+        // A longer gap (came back next day, deliberately relaunched) asks
+        // whether to resume or start over instead of silently dropping the
+        // user back mid-tour.
+        private const val RESUME_SILENT_WINDOW_MS = 45L * 60 * 1000
+
+        // First time a walk starts, pull the whole (fixed, small) tour area into
+        // osmdroid's disk cache in the background so the map keeps working if
+        // signal drops mid-walk and a returning visitor makes ~no repeat tile
+        // requests. z15–18 over the ~1.5×3 km boundary is a few hundred tiles.
+        private const val PREWARM_ZOOM_MIN = 15
+        private const val PREWARM_ZOOM_MAX = 18
+
+        // Basemap history:
+        //  - tile.openstreetmap.org blocked this app's traffic on real devices,
+        //    seemingly fingerprinting the HTTP client rather than the User-Agent.
+        //  - CARTO's keyless basemap (basemaps.cartocdn.com) then started serving
+        //    an "API key required" watermark tile once an IP crossed its
+        //    anonymous quota — so the map degraded to that image mid-use.
         //
-        // Voyager (not the more muted Positron style) for visible road/building/
-        // park contrast, and @2x retina tiles for sharpness — the tile grid is
-        // still indexed on the standard 256px logical size (matches slippy-map
-        // z/x/y math), osmdroid just downscale-renders the higher-res source
-        // image into that same on-screen box, which is what makes it look sharper
-        // rather than simply bigger.
-        private val CARTO_VOYAGER = org.osmdroid.tileprovider.tilesource.XYTileSource(
-            "CartoVoyager",
-            0, 20, 256, "@2x.png",
+        // OpenStreetMap France's Humanitarian (HOT) style: keyless, standard
+        // z/x/y 256px scheme, a separate community deployment (not the main OSM
+        // tile infra that blocked us), a clean pedestrian-oriented style, and
+        // explicitly provided for this kind of light embedded use.
+        // https://wiki.openstreetmap.org/wiki/OpenStreetMap_France
+        private val OSM_HOT = org.osmdroid.tileprovider.tilesource.XYTileSource(
+            "OSMFranceHOT",
+            0, 20, 256, ".png",
             arrayOf(
-                "https://a.basemaps.cartocdn.com/rastertiles/voyager/",
-                "https://b.basemaps.cartocdn.com/rastertiles/voyager/",
-                "https://c.basemaps.cartocdn.com/rastertiles/voyager/",
-                "https://d.basemaps.cartocdn.com/rastertiles/voyager/"
+                "https://a.tile.openstreetmap.fr/hot/",
+                "https://b.tile.openstreetmap.fr/hot/",
+                "https://c.tile.openstreetmap.fr/hot/"
             ),
-            "© OpenStreetMap contributors © CARTO"
+            "© OpenStreetMap contributors — tiles courtesy of OpenStreetMap France"
         )
     }
     
@@ -108,13 +122,32 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gateStatusText: TextView
     private lateinit var gateDistanceText: TextView
     private lateinit var startTourButton: Button
+    private lateinit var gateOverrideButton: Button
+    private lateinit var recenterButton: Button
+    private lateinit var arrivalCard: View
+    private lateinit var arrivalCardTitle: TextView
+    // True while the map auto-centres on GPS fixes. Suspended as soon as the
+    // user touches the map (drag/pinch), so their gesture isn't fought by the
+    // next location update; restored by tapping recenterButton.
+    private var followMode = true
     private var tourStarted = false
+    // Set when the user chose "continue anyway" past a denied location
+    // permission — the map still loads but live navigation can't work.
+    private var locationTrackingUnavailable = false
+    // Consecutive gate updates reporting "outside the area", so a couple of
+    // noisy edge-of-boundary fixes don't bounce the user back to the intro.
+    private var consecutiveOutsideGateFixes = 0
+    // True when the open waypoint detail screen was launched from an arrival
+    // (vs. peeking at a stop mid-walk) — so backing out of it still advances.
+    private var detailOpenedOnArrival = false
+    // Waypoint index we've already shown the "you've moved on — advance?" prompt
+    // for, so it isn't shown repeatedly for the same stop.
+    private var movedOnPromptHandledForIndex = -1
     private var returnToIntroJob: Job? = null
     private var currentTour: WalkingTour? = null
     private var waypointMarkers = mutableListOf<Marker>()
     private var routePolylines = mutableListOf<Polyline>()
-    private var userToWaypointPolyline: Polyline? = null
-    private var lastUserRouteLocation: Location? = null
+    private var routeArrowMarkers = mutableListOf<Marker>()
     private var myLocationOverlay: MyLocationNewOverlay? = null
     private var tourBoundaryOverlay: Polygon? = null
     private var currentLocation: Location? = null
@@ -142,27 +175,30 @@ class MainActivity : AppCompatActivity() {
     private val waypointDetailsLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            locationService.moveToNextWaypoint()
-            
-            val shouldShowCompletion = result.data?.getBooleanExtra("show_completion", false) ?: false
-            if (shouldShowCompletion) {
-                Toast.makeText(this, getString(R.string.tour_complete_celebration), Toast.LENGTH_LONG).show()
-                
-                navigationInstructionText.postDelayed({
-                    launchTourCompletionActivityWithAnimation()
-                }, 1500)
-            } else {
-                currentLocation?.let { location ->
-                    updateNavigationInstructions(location)
-                    // New target waypoint — refresh the live route immediately
-                    // rather than waiting for 20m of movement toward it.
-                    refreshUserRouteIfNeeded(location, force = true)
-                }
-                updateAllWaypointMarkers()
-            }
+        // Advancing to the next stop happens when the user taps Continue
+        // (RESULT_OK) OR when they simply back out of a screen they opened *on
+        // arrival* — "reached it and read it" is enough. Peeking at a stop's
+        // page mid-walk (not arrived) still needs the explicit Continue tap.
+        val advance = result.resultCode == RESULT_OK || detailOpenedOnArrival
+        detailOpenedOnArrival = false
+        if (!advance) return@registerForActivityResult
+
+        val wasLastWaypoint = locationService.isTourCompleted()
+        locationService.moveToNextWaypoint()
+        hideArrivalCard()
+        if (!wasLastWaypoint) {
+            currentLocation?.let { location -> updateNavigationInstructions(location) }
+            updateAllWaypointMarkers()
         }
+        // Completion is driven solely by the tourCompleted observer, which
+        // moveToNextWaypoint() triggers when stepping past the final stop.
     }
+
+    // Arrival notifications are best-effort: if the user declines this we still
+    // show the on-screen arrival card and vibrate.
+    private val notificationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* nothing to do — arrival still surfaces on-screen */ }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -183,6 +219,14 @@ class MainActivity : AppCompatActivity() {
         // "not identifiable". https://operations.osmfoundation.org/policies/tiles/
         Configuration.getInstance().userAgentValue =
             "BruffWalkingTour/${BuildConfig.VERSION_NAME} (+https://github.com/jimcottam1/bruffwalkingtour)"
+        // The tour is one fixed ~1.5×3 km area — once its tiles are cached they
+        // should effectively never expire or be trimmed, so a returning visitor
+        // (or one who loses signal mid-walk) keeps a working map and the app
+        // makes ~no repeat tile requests.
+        Configuration.getInstance().expirationOverrideDuration =
+            1000L * 60 * 60 * 24 * 365 * 5 // ~5 years
+        Configuration.getInstance().tileFileSystemCacheMaxBytes = 200L * 1024 * 1024
+        Configuration.getInstance().tileFileSystemCacheTrimBytes = 160L * 1024 * 1024
         purgeStaleBlockedTileCache()
 
         setContentView(R.layout.activity_main)
@@ -195,10 +239,46 @@ class MainActivity : AppCompatActivity() {
         setupMap()
         setupLocationService()
         setupRouteService()
-        // The map/tour itself is loaded lazily by startTour(), once the user
-        // confirms they're inside the boundary via the gate overlay's button.
+        createArrivalNotificationChannel()
+        requestNotificationPermissionIfNeeded()
+
+        // Normally the map/tour is loaded lazily by startTour() once the user
+        // clears the boundary gate. If a tour was already in progress, either
+        // resume it silently (recent interruption) or ask (long gap / deliberate
+        // relaunch) rather than always dropping the user back in mid-tour.
+        if (locationService.hasActiveSession()) {
+            if (locationService.millisSinceLastActive() < RESUME_SILENT_WINDOW_MS) {
+                LogUtils.d("MainActivity", "Recent tour session — resuming, skipping gate")
+                startTour()
+            } else {
+                LogUtils.d("MainActivity", "Stale tour session — asking resume vs start over")
+                promptResumeOrRestart()
+            }
+        }
         requestLocationPermissions()
         LogUtils.d("MainActivity", "onCreate completed")
+    }
+
+    /**
+     * A previous tour is saved but hasn't been touched for a while — ask the
+     * user whether to carry on from where they were or start the tour over,
+     * rather than silently resuming (which is surprising on a deliberate
+     * relaunch). Shown over the still-visible boundary gate.
+     */
+    private fun promptResumeOrRestart() {
+        val savedIndex = locationService.savedWaypointIndex()
+        val total = BruffTourData.getDefaultTour().waypoints.size
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.resume_title))
+            .setMessage(getString(R.string.resume_message, savedIndex + 1, total))
+            .setPositiveButton(getString(R.string.resume_continue)) { _, _ -> startTour() }
+            .setNegativeButton(getString(R.string.resume_start_over)) { _, _ ->
+                // Fall through to the normal gate — it's already on screen and
+                // driven by location updates.
+                locationService.clearSavedProgress()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     /**
@@ -219,92 +299,68 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         LogUtils.d("MainActivity", "Starting tour — loading map and route data")
         loadTour()
+        // From here on an interrupted session resumes instead of re-gating.
+        locationService.beginTourSession()
         addTourBoundaryToMap()
-        // Draw the route from wherever the user actually is (e.g. a car park)
-        // to the first waypoint immediately, rather than waiting for the next
-        // GPS fix or 20m of movement.
-        currentLocation?.let { refreshUserRouteIfNeeded(it, force = true) }
+        prewarmTourTilesOnce()
     }
 
     /**
-     * Fetches and draws a live road route from the user's current position to
-     * the first waypoint — separate from the static trail-between-waypoints
-     * line drawn by drawRouteOnMap()/drawRoutesAsync(). This is what guides
-     * someone from an unknown starting point (e.g. a car park) to the tour's
-     * actual start. Only relevant before that first waypoint is reached — once
-     * the user is on the marked trail, the static line between waypoints is
-     * the route, so this clears itself out at that point.
+     * First time a walk starts, quietly pull the whole tour area's tiles into
+     * osmdroid's disk cache in the background via osmdroid's own CacheManager
+     * (which throttles politely). After this the install makes essentially no
+     * further basemap requests for the tour, and the map survives a mid-walk
+     * signal drop. Runs once per install; a partial result still counts.
      */
-    private fun refreshUserRouteIfNeeded(location: Location, force: Boolean = false) {
-        if (!tourStarted) return
-        if (locationService.getCurrentWaypointIndex() != 0) {
-            clearUserToWaypointRoute()
-            return
+    private fun prewarmTourTilesOnce() {
+        val prefs = getSharedPreferences("bruff_tour_prefs", MODE_PRIVATE)
+        if (prefs.getBoolean("tiles_prewarmed_v1", false)) return
+        if (!NetworkUtils.isNetworkAvailable(this)) return
+        try {
+            val cacheManager = org.osmdroid.tileprovider.cachemanager.CacheManager(mapView)
+            cacheManager.downloadAreaAsyncNoUI(
+                this,
+                calculateTourBoundary(),
+                PREWARM_ZOOM_MIN,
+                PREWARM_ZOOM_MAX,
+                object : org.osmdroid.tileprovider.cachemanager.CacheManager.CacheManagerCallback {
+                    override fun onTaskComplete() {
+                        prefs.edit().putBoolean("tiles_prewarmed_v1", true).apply()
+                        LogUtils.d("MainActivity", "Tour tile pre-warm complete")
+                    }
+                    override fun onTaskFailed(errors: Int) {
+                        // A partial cache is still useful — don't retry every walk.
+                        prefs.edit().putBoolean("tiles_prewarmed_v1", true).apply()
+                        LogUtils.w("MainActivity", "Tour tile pre-warm finished with $errors error(s)")
+                    }
+                    override fun updateProgress(progress: Int, currentZoom: Int, zoomMin: Int, zoomMax: Int) {}
+                    override fun downloadStarted() {}
+                    override fun setPossibleTilesInArea(total: Int) {
+                        LogUtils.d("MainActivity", "Pre-warming ~$total tour tiles (z$PREWARM_ZOOM_MIN–$PREWARM_ZOOM_MAX)")
+                    }
+                },
+            )
+        } catch (e: Exception) {
+            LogUtils.w("MainActivity", "Could not start tour tile pre-warm", e)
         }
-        val waypoint = locationService.getCurrentWaypoint() ?: return
-
-        if (!force) {
-            val movedSinceLastFetch = lastUserRouteLocation?.let { last ->
-                locationService.calculateDistance(
-                    last.latitude, last.longitude,
-                    location.latitude, location.longitude
-                )
-            } ?: Float.MAX_VALUE
-            if (movedSinceLastFetch < USER_ROUTE_REFRESH_THRESHOLD_M) return
-        }
-        lastUserRouteLocation = location
-
-        val start = GeoPoint(location.latitude, location.longitude)
-        val end = GeoPoint(waypoint.latitude, waypoint.longitude)
-        lifecycleScope.launch {
-            try {
-                val points = withContext(Dispatchers.IO) {
-                    routeService.getRoadBasedRoute(start, end)
-                }
-                drawUserToWaypointRoute(points)
-            } catch (e: Exception) {
-                LogUtils.w("MainActivity", "User route fetch failed: ${e.message}")
-            }
-        }
-    }
-
-    private fun drawUserToWaypointRoute(points: List<GeoPoint>) {
-        clearUserToWaypointRoute()
-        userToWaypointPolyline = Polyline().apply {
-            setPoints(points)
-            // Blue to match the "current target" waypoint marker colour, visually
-            // distinct from the static amber trail-between-waypoints line.
-            getOutlinePaint().color = Color.argb(220, 33, 150, 243)
-            getOutlinePaint().strokeWidth = 8.0f
-            getOutlinePaint().strokeCap = android.graphics.Paint.Cap.ROUND
-            getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
-        }
-        mapView.overlays.add(userToWaypointPolyline)
-        mapView.invalidate()
-    }
-
-    private fun clearUserToWaypointRoute() {
-        userToWaypointPolyline?.let { mapView.overlays.remove(it) }
-        userToWaypointPolyline = null
-        mapView.invalidate()
     }
 
     /**
-     * One-time cleanup for installs that ran before the userAgentValue fix above:
-     * OSM's tile-blocked response is a real 200 OK image, so osmdroid cached it to
-     * disk like any other tile and would keep serving it forever. Purge the tile
-     * cache once so those devices self-heal without the user clearing app storage.
+     * One-time cleanup after a basemap provider change. A blocked/"API key"
+     * response is a real 200 OK image, so osmdroid caches it to disk like any
+     * other tile and keeps serving it forever. Bump the key whenever the tile
+     * source changes so existing installs self-heal without clearing app storage.
      */
     private fun purgeStaleBlockedTileCache() {
         val prefs = getSharedPreferences("bruff_tour_prefs", MODE_PRIVATE)
-        if (prefs.getBoolean("tile_cache_purged_v1", false)) return
+        if (prefs.getBoolean("tile_cache_purged_v2", false)) return
         try {
             Configuration.getInstance().getOsmdroidTileCache(this)?.deleteRecursively()
             LogUtils.d("MainActivity", "Purged stale osmdroid tile cache")
         } catch (e: Exception) {
             LogUtils.w("MainActivity", "Failed to purge tile cache", e)
         }
-        prefs.edit().putBoolean("tile_cache_purged_v1", true).apply()
+        prefs.edit().putBoolean("tile_cache_purged_v2", true).apply()
     }
 
     private fun setupSystemUI() {
@@ -317,6 +373,11 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun setupViews() {
+        // The tour screen is a full-bleed map — no action bar (its only job was
+        // hosting Help and a distance subtitle that duplicated the bottom bar).
+        // Matches IntroActivity / WaypointDetailActivity / TourCompletionActivity.
+        supportActionBar?.hide()
+
         navigationInstructionText = findViewById(R.id.navigation_instruction)
         distanceInfoText = findViewById(R.id.distance_info)
         gpsAccuracyText = findViewById(R.id.gps_accuracy)
@@ -324,11 +385,32 @@ class MainActivity : AppCompatActivity() {
         gateStatusText = findViewById(R.id.gate_status_text)
         gateDistanceText = findViewById(R.id.gate_distance_text)
         startTourButton = findViewById(R.id.start_tour_button)
+        gateOverrideButton = findViewById(R.id.gate_override_button)
+        recenterButton = findViewById(R.id.recenter_button)
+        arrivalCard = findViewById(R.id.arrival_card)
+        arrivalCardTitle = findViewById(R.id.arrival_card_title)
 
         // Enable clickable links in navigation text
         navigationInstructionText.movementMethod = LinkMovementMethod.getInstance()
 
         startTourButton.setOnClickListener { startTour() }
+        gateOverrideButton.setOnClickListener { startTour() }
+        findViewById<Button>(R.id.help_button).setOnClickListener {
+            startActivity(Intent(this, HelpActivity::class.java))
+        }
+        findViewById<Button>(R.id.arrival_card_button).setOnClickListener {
+            nearbyWaypoint?.let { showWaypointDetails(it) }
+        }
+        findViewById<Button>(R.id.arrival_card_dismiss).setOnClickListener {
+            arrivalCard.visibility = View.GONE
+        }
+        recenterButton.setOnClickListener {
+            followMode = true
+            recenterButton.visibility = View.GONE
+            currentLocation?.let { location ->
+                mapView.controller.animateTo(GeoPoint(location.latitude, location.longitude), 17.5, 1000L)
+            }
+        }
     }
     
     private fun setupMap() {
@@ -336,7 +418,7 @@ class MainActivity : AppCompatActivity() {
         // Kept hidden (and no tour/route data loaded) until startTour() runs,
         // so nothing is drawn or fetched while the user is outside the boundary.
         mapView.visibility = View.GONE
-        mapView.setTileSource(CARTO_VOYAGER)
+        mapView.setTileSource(OSM_HOT)
         mapView.setMultiTouchControls(true)
 
         // OSM's tile usage policy requires visible attribution on the map.
@@ -355,8 +437,11 @@ class MainActivity : AppCompatActivity() {
         mapView.setMinZoomLevel(10.0)  // Wide area view
         mapView.setMaxZoomLevel(20.0)  // Very detailed street view
         
-        // Scroll boundaries removed - they were blocking map interaction
-        
+        // Clamp panning to the tour area (the same box drawn by
+        // addTourBoundaryToMap()) — the map can be dragged right up to its
+        // edges but no further.
+        mapView.setScrollableAreaLimitDouble(calculateTourBoundary())
+
         val mapController = mapView.controller
         mapController.setZoom(17.5) // Closer street level zoom
         
@@ -366,7 +451,17 @@ class MainActivity : AppCompatActivity() {
         // Enable zoom controls and proper touch handling
         mapView.setMultiTouchControls(true)   // Enable pinch-to-zoom
         mapView.setUseDataConnection(true)    // Allow downloading map tiles
-        
+
+        // Any user touch (drag or pinch) suspends auto-follow so the next GPS
+        // fix's animateTo() doesn't fight the gesture or snap the map back.
+        mapView.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN && followMode) {
+                followMode = false
+                recenterButton.visibility = View.VISIBLE
+            }
+            false // never consume — let osmdroid's own gesture handling run
+        }
+
         // Add map listener to handle events properly and prevent unwanted actions
         mapView.addMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
@@ -396,7 +491,6 @@ class MainActivity : AppCompatActivity() {
             updateMapCenter(location)
             updateNavigationInstructions(location)
             updateAllWaypointMarkers()
-            refreshUserRouteIfNeeded(location)
         })
 
         locationService.locationAccuracy.observe(this, Observer { accuracy ->
@@ -415,34 +509,61 @@ class MainActivity : AppCompatActivity() {
         
         locationService.nearbyWaypoint.observe(this, Observer { waypoint ->
             nearbyWaypoint = waypoint
-            waypoint?.let {
-                Toast.makeText(this, getString(R.string.arrived_at_waypoint, it.name), Toast.LENGTH_LONG).show()
-                // Update navigation text to show arrival
-                currentLocation?.let { location ->
-                    updateNavigationInstructions(location)
-                }
-            } ?: run {
-                // Update navigation text back to normal
-                currentLocation?.let { location ->
-                    updateNavigationInstructions(location)
-                }
+            if (waypoint != null) {
+                // Reaching a stop is the payoff moment — make it hard to miss:
+                // haptic buzz, a heads-up notification, and a persistent on-screen
+                // card with an Explore button (not just a 3-second toast).
+                vibrate()
+                showArrivalCard(waypoint)
+                postArrivalNotification(waypoint)
+            } else {
+                hideArrivalCard()
             }
+            currentLocation?.let { location -> updateNavigationInstructions(location) }
         })
-        
-        locationService.distanceToNext.observe(this, Observer { distance ->
-            updateNavigationInfo(distance)
-        })
-        
+
         locationService.tourCompleted.observe(this, Observer { completed ->
             if (completed) {
-                launchTourCompletionActivity()
+                Toast.makeText(this, getString(R.string.tour_complete_celebration), Toast.LENGTH_LONG).show()
+                // Let the celebration toast breathe, then fade into the summary.
+                navigationInstructionText.postDelayed({
+                    launchTourCompletionActivityWithAnimation()
+                }, 1500)
             }
         })
-        
+
+        locationService.suggestAdvance.observe(this, Observer { fromWaypoint ->
+            maybePromptToAdvance(fromWaypoint)
+        })
+
         locationService.outsideTourArea.observe(this, Observer { guidanceMessage ->
             updateGateState(guidanceMessage)
         })
 
+    }
+
+    /**
+     * The user reached a stop earlier but walked on without tapping Continue and
+     * is now closer to the next stop — offer to advance so navigation stops
+     * pointing back at a stop they've already seen. Shown once per stop.
+     */
+    private fun maybePromptToAdvance(fromWaypoint: TourWaypoint?) {
+        if (fromWaypoint == null || !tourStarted) return
+        val fromIndex = locationService.getCurrentWaypointIndex()
+        if (movedOnPromptHandledForIndex == fromIndex) return
+        movedOnPromptHandledForIndex = fromIndex
+        val next = locationService.getNextWaypoint() ?: return
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setMessage(getString(R.string.moved_on_prompt, fromWaypoint.name, next.name))
+            .setPositiveButton(getString(R.string.moved_on_advance)) { _, _ ->
+                locationService.moveToNextWaypoint()
+                hideArrivalCard()
+                currentLocation?.let { location -> updateNavigationInstructions(location) }
+                updateAllWaypointMarkers()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
     
     private fun loadTour() {
@@ -477,15 +598,19 @@ class MainActivity : AppCompatActivity() {
                     LogUtils.w("MainActivity", "OSRM route fetch failed for leg $i: ${e.message}")
                 }
 
-                // Replace placeholder polylines with whatever legs have resolved so far
+                // Replace placeholder polylines (and their arrows) with whatever
+                // legs have resolved so far
                 routePolylines.forEach { mapView.overlays.remove(it) }
                 routePolylines.clear()
+                routeArrowMarkers.forEach { mapView.overlays.remove(it) }
+                routeArrowMarkers.clear()
                 waypoints.indices.drop(1).forEachIndexed { idx, _ ->
+                    val legPoints = resolvedLegs[idx] ?: listOf(
+                        GeoPoint(waypoints[idx].latitude,     waypoints[idx].longitude),
+                        GeoPoint(waypoints[idx + 1].latitude, waypoints[idx + 1].longitude)
+                    )
                     val poly = Polyline().apply {
-                        setPoints(resolvedLegs[idx] ?: listOf(
-                            GeoPoint(waypoints[idx].latitude,     waypoints[idx].longitude),
-                            GeoPoint(waypoints[idx + 1].latitude, waypoints[idx + 1].longitude)
-                        ))
+                        setPoints(legPoints)
                         getOutlinePaint().color = Color.argb(200, 200, 146, 42)
                         getOutlinePaint().strokeWidth = 8.0f
                         getOutlinePaint().strokeCap  = android.graphics.Paint.Cap.ROUND
@@ -493,6 +618,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     mapView.overlays.add(poly)
                     routePolylines.add(poly)
+                    addDirectionArrow(legPoints)
                 }
                 mapView.invalidate()
             }
@@ -760,15 +886,17 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun drawRouteOnMap(waypoints: List<TourWaypoint>) {
-        // Clear existing route polylines
+        // Clear existing route polylines and their direction arrows
         routePolylines.forEach { mapView.overlays.remove(it) }
         routePolylines.clear()
-        
+        routeArrowMarkers.forEach { mapView.overlays.remove(it) }
+        routeArrowMarkers.clear()
+
         // Create road-following routes between consecutive waypoints
         for (i in 0 until waypoints.size - 1) {
             val startPoint = GeoPoint(waypoints[i].latitude, waypoints[i].longitude)
             val endPoint = GeoPoint(waypoints[i + 1].latitude, waypoints[i + 1].longitude)
-            
+
             // Use enhanced road-based routing with fallback
             val routePoints = try {
                 routeService.getRoadBasedRouteSync(startPoint, endPoint)
@@ -776,21 +904,67 @@ class MainActivity : AppCompatActivity() {
                 // Fallback to direct line if routing fails
                 listOf(startPoint, endPoint)
             }
-            
+
             val polyline = Polyline().apply {
                 setPoints(routePoints)
-                getOutlinePaint().color = Color.BLUE
+                // Amber — the tour's own waypoint-to-waypoint path, the single
+                // route line shown on the map.
+                getOutlinePaint().color = Color.argb(230, 200, 146, 42)
                 getOutlinePaint().strokeWidth = 8.0f
+                getOutlinePaint().strokeCap = android.graphics.Paint.Cap.ROUND
+                getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
             }
-            
+
             mapView.overlays.add(polyline)
             routePolylines.add(polyline)
+
+            addDirectionArrow(routePoints)
         }
-        
+
         mapView.invalidate()
+    }
+
+    /**
+     * Places a small chevron at the midpoint of a tour route segment, rotated
+     * to the bearing of travel — makes the walking direction (waypoint order)
+     * obvious at a glance, distinct from the live route-to-you line.
+     */
+    private fun addDirectionArrow(routePoints: List<GeoPoint>) {
+        if (routePoints.size < 2) return
+        val midIndex = routePoints.size / 2
+        // Bearing is taken from the leg's overall start/end points, not the
+        // points immediately either side of the midpoint — real OSRM road
+        // geometry can double back briefly at a junction, and using only
+        // adjacent points picked up that local wiggle instead of the leg's
+        // actual direction of travel (arrow pointed backwards on some legs).
+        val from = routePoints.first()
+        val to = routePoints.last()
+        val bearing = Location("").apply {
+            latitude = from.latitude
+            longitude = from.longitude
+        }.bearingTo(Location("").apply {
+            latitude = to.latitude
+            longitude = to.longitude
+        })
+
+        val arrow = Marker(mapView).apply {
+            position = routePoints[midIndex]
+            icon = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_route_arrow)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            // osmdroid's Marker.rotation turns out to be counter-clockwise,
+            // opposite to Location.bearingTo()'s clockwise-from-north degrees
+            // (confirmed on-device: east/west legs pointed backwards while
+            // north/south legs looked right, since south == -south mod 360).
+            rotation = -bearing
+            isFlat = true
+            setInfoWindow(null)
+        }
+        mapView.overlays.add(arrow)
+        routeArrowMarkers.add(arrow)
     }
     
     private fun updateMapCenter(location: Location) {
+        if (!followMode) return // user is manually panning/zooming — don't fight them
         val geoPoint = GeoPoint(location.latitude, location.longitude)
         // Center the map on current location with smooth animation
         mapView.controller.animateTo(geoPoint, 17.5, 1000L)
@@ -804,14 +978,19 @@ class MainActivity : AppCompatActivity() {
         if (tourStarted) return // gate already dismissed
 
         if (outsideMessage == null) {
+            consecutiveOutsideGateFixes = 0
             returnToIntroJob?.cancel()
             returnToIntroJob = null
             gateStatusText.text = getString(R.string.gate_ready)
             gateDistanceText.text = ""
             startTourButton.visibility = View.VISIBLE
+            gateOverrideButton.visibility = View.GONE
         } else {
+            consecutiveOutsideGateFixes++
             gateStatusText.text = getString(R.string.outside_bruff_message)
             startTourButton.visibility = View.GONE
+            // Always give the user a way through — GPS may just be wrong.
+            gateOverrideButton.visibility = View.VISIBLE
             currentLocation?.let { location ->
                 val distance = locationService.calculateDistance(
                     location.latitude, location.longitude,
@@ -825,9 +1004,11 @@ class MainActivity : AppCompatActivity() {
                 gateDistanceText.text = getString(R.string.gate_distance_away, distanceText)
             }
 
-            // Don't leave the user stuck on the gate — bounce back to the intro
-            // screen after a few seconds if they're still outside the area.
-            if (returnToIntroJob == null) {
+            // Bounce back to the intro screen only after several consecutive
+            // outside fixes (not one noisy reading) and a generous delay.
+            if (consecutiveOutsideGateFixes >= GATE_OUTSIDE_FIXES_BEFORE_RETURN &&
+                returnToIntroJob == null
+            ) {
                 returnToIntroJob = lifecycleScope.launch {
                     delay(GATE_OUTSIDE_RETURN_DELAY_MS)
                     returnToIntro()
@@ -842,6 +1023,9 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showWaypointDetails(waypoint: TourWaypoint) {
+        // Remember whether this was opened because the user just arrived — if so,
+        // backing out of the detail screen still counts as "done with this stop".
+        detailOpenedOnArrival = nearbyWaypoint?.id == waypoint.id
         val intent = Intent(this, WaypointDetailActivity::class.java).apply {
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_NAME, waypoint.name)
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_DESCRIPTION, waypoint.description)
@@ -869,7 +1053,14 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton(getString(R.string.continue_anyway)) { _, _ ->
                 // Without location we can't confirm the user is in the boundary —
                 // bypass the gate directly rather than leaving them stuck on it.
+                // Live navigation can't work, so say so plainly instead of
+                // leaving the bar stuck on "Loading navigation…".
+                locationTrackingUnavailable = true
                 startTour()
+                navigationInstructionText.text =
+                    getString(R.string.navigation_unavailable_no_location)
+                distanceInfoText.text = ""
+                gpsAccuracyText.text = getString(R.string.gps_permission_denied)
             }
             .show()
     }
@@ -879,11 +1070,65 @@ class MainActivity : AppCompatActivity() {
         intent.data = android.net.Uri.fromParts("package", packageName, null)
         startActivity(intent)
     }
-    
-    private fun launchTourCompletionActivity() {
-        val intent = Intent(this, TourCompletionActivity::class.java)
-        startActivity(intent)
-        finish()
+
+    // ---- Arrival cue (card + notification) -----------------------------------
+
+    private fun showArrivalCard(waypoint: TourWaypoint) {
+        arrivalCardTitle.text = getString(R.string.arrival_card_title, waypoint.name)
+        arrivalCard.visibility = View.VISIBLE
+    }
+
+    private fun hideArrivalCard() {
+        if (::arrivalCard.isInitialized) arrivalCard.visibility = View.GONE
+    }
+
+    private fun createArrivalNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val channel = android.app.NotificationChannel(
+            ARRIVAL_CHANNEL_ID,
+            getString(R.string.arrival_channel_name),
+            android.app.NotificationManager.IMPORTANCE_HIGH
+        ).apply { description = getString(R.string.arrival_channel_desc) }
+        (getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager)
+            .createNotificationChannel(channel)
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun postArrivalNotification(waypoint: TourWaypoint) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return // user declined notifications — the on-screen card still shows
+        }
+
+        val tapIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pending = android.app.PendingIntent.getActivity(
+            this, 0, tapIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = androidx.core.app.NotificationCompat.Builder(this, ARRIVAL_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(getString(R.string.arrival_notification_title, waypoint.name))
+            .setContentText(getString(R.string.arrival_notification_text))
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pending)
+            .build()
+
+        androidx.core.app.NotificationManagerCompat.from(this)
+            .notify(ARRIVAL_NOTIFICATION_ID, notification)
     }
     
     private fun launchTourCompletionActivityWithAnimation() {
@@ -903,8 +1148,12 @@ class MainActivity : AppCompatActivity() {
     
     
     private fun updateNavigationInstructions(location: Location) {
+        // Map-only degraded mode after a denied location permission — the nav bar
+        // shows a fixed explanation set in handleLocationPermissionDenied().
+        if (locationTrackingUnavailable) return
+
         val currentWaypoint = locationService.getCurrentWaypoint()
-        
+
         // Check if user is currently near a waypoint (has arrived)
         nearbyWaypoint?.let { arrivedWaypoint ->
             setNavigationTextWithClickableLink("Arrived at ${arrivedWaypoint.name}", arrivedWaypoint.name, arrivedWaypoint)
@@ -943,32 +1192,6 @@ class MainActivity : AppCompatActivity() {
         navigationInstructionText.text = spannableString
     }
     
-    private fun updateNavigationInfo(distance: Float) {
-        val currentWaypoint = locationService.getCurrentWaypoint()
-        currentWaypoint?.let { waypoint ->
-            val distanceText = if (distance < 1000) {
-                "${distance.toInt()}m to ${waypoint.name}"
-            } else {
-                "${String.format("%.1f", distance / 1000)}km to ${waypoint.name}"
-            }
-            
-            supportActionBar?.subtitle = distanceText
-        }
-    }
-    
-    override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
-        if (item.itemId == R.id.action_help) {
-            startActivity(Intent(this, HelpActivity::class.java))
-            return true
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
     override fun onResume() {
         super.onResume()
         mapView.onResume()
@@ -979,17 +1202,10 @@ class MainActivity : AppCompatActivity() {
         LogUtils.d("MainActivity", "onResume: restarting location updates")
         locationService.startLocationUpdates()
         
-        // Force a location and distance update when resuming
+        // Force a navigation refresh when resuming
         currentLocation?.let { location ->
             LogUtils.d("MainActivity", "onResume: forcing location update")
             updateNavigationInstructions(location)
-            locationService.getCurrentWaypoint()?.let { waypoint ->
-                val distance = locationService.calculateDistance(
-                    location.latitude, location.longitude,
-                    waypoint.latitude, waypoint.longitude
-                )
-                updateNavigationInfo(distance)
-            }
         }
     }
     
@@ -997,6 +1213,9 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         mapView.onPause()
         locationService.stopLocationUpdates()
+        // Record when the tour was last in front of the user, so a quick return
+        // resumes silently but a long absence prompts (see promptResumeOrRestart).
+        if (tourStarted) locationService.touchSession()
     }
     
     override fun onDestroy() {

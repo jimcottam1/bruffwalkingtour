@@ -10,13 +10,42 @@
     
     <!-- Network connectivity -->
     <string name="no_network_connection">No internet connection. Some features may be limited.</string>
+
+    <!-- Map re-centre button, shown after the user manually pans/zooms away -->
+    <string name="recenter_button">⌖ Re-centre</string>
     
     <!-- Location outside Bruff -->
     <string name="outside_bruff_message">📍 You appear to be outside Bruff town area.\n\nPlease start the application after you are in the main street for the best tour experience!</string>
     <string name="gate_locating">Locating you…</string>
     <string name="gate_ready">You\'re in Bruff — ready to start!</string>
     <string name="start_tour_button">Start Tour</string>
+    <string name="gate_start_anyway">Start here anyway</string>
     <string name="gate_distance_away">%s away from Bruff town centre</string>
+
+    <!-- Degraded mode: location permission denied -->
+    <string name="navigation_unavailable_no_location">Navigation needs location permission — showing map only</string>
+    <string name="gps_permission_denied">GPS: permission denied</string>
+
+    <!-- Arrival cue: on-screen card + heads-up notification -->
+    <string name="arrival_card_title_default">You\'ve arrived</string>
+    <string name="arrival_card_title">🎯 You\'ve arrived at %s</string>
+    <string name="arrival_card_hint">Read the story of this stop, then continue your walk.</string>
+    <string name="arrival_card_explore">Explore this stop</string>
+    <string name="arrival_card_dismiss">Not now</string>
+    <string name="arrival_channel_name">Stop arrivals</string>
+    <string name="arrival_channel_desc">Notifies you the moment you reach a tour stop</string>
+    <string name="arrival_notification_title">You\'ve reached %s</string>
+    <string name="arrival_notification_text">Tap to read about this stop</string>
+
+    <!-- Prompt shown when the user reached a stop but walked on without continuing -->
+    <string name="moved_on_prompt">You\'ve moved on from %1$s. Advance to %2$s?</string>
+    <string name="moved_on_advance">Advance</string>
+
+    <!-- Prompt on relaunch when an unfinished tour was saved a while ago -->
+    <string name="resume_title">Resume your walk?</string>
+    <string name="resume_message">You were on your way to stop %1$d of %2$d. Carry on from there, or start the tour again?</string>
+    <string name="resume_continue">Resume</string>
+    <string name="resume_start_over">Start over</string>
     
     <!-- Navigation -->
     <string name="arrived_at_waypoint">🎯 Arrived at %s!</string>
@@ -50,11 +79,11 @@
     <string name="help_section_getting_started_title">Getting Started</string>
     <string name="help_section_getting_started_body">You need to be in Bruff to begin. If you\'re not there yet, the app will show you how far away you are and automatically return to the home screen after a few seconds — just reopen the tour once you\'ve arrived.</string>
     <string name="help_section_start_title">While You\'re in Bruff</string>
-    <string name="help_section_start_body">Once you\'re in the area, tap Start Tour. The app will show you a live route from wherever you are to the first stop.</string>
+    <string name="help_section_start_body">Once you\'re in the area, tap Start Tour. The map will show you the route to the first stop.</string>
     <string name="help_section_route_title">Following the Route</string>
-    <string name="help_section_route_body">• The blue line guides you to the very first stop.\n• Once you\'re on the trail, the gold line connects all 4 stops in order — that\'s your route for the rest of the walk.\n• The arrow and distance at the bottom of the screen always point to your next stop.</string>
+    <string name="help_section_route_body">• The gold line connects all 4 stops in order — that\'s your route for the whole walk.\n• The arrow and distance at the bottom of the screen always point to your next stop.</string>
     <string name="help_section_arrival_title">Arriving at a Stop</string>
-    <string name="help_section_arrival_body">When you\'re close enough to a site, you\'ll get an arrival notification. Tap it to read about the site\'s history, then tap Continue to move on to the next stop.</string>
+    <string name="help_section_arrival_body">When you\'re close enough to a site your phone buzzes, shows a notification, and a card appears with an \'Explore this stop\' button. Open it to read the site\'s history, then tap Continue for the next stop. If you walk on without continuing, the app will offer to move you along.</string>
     <string name="help_section_map_title">Reading the Map</string>
     <string name="help_section_map_body">🔵 Blue, pulsing marker — your current target\n🟢 Green marker — a stop still ahead\n⚪ Grey marker with a checkmark — a stop you\'ve already visited</string>
     <string name="help_section_tips_title">Tips</string>

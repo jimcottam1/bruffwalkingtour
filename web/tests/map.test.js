@@ -231,8 +231,11 @@ describe('updateUserLocation', () => {
 
   it('moves the existing marker on subsequent calls (does not create a new one)', () => {
     updateUserLocation(52.477, -8.548);
+    // First call creates the dot plus its pulsing halo; neither should be
+    // recreated on subsequent calls.
+    expect(L.circleMarker).toHaveBeenCalledTimes(2);
     updateUserLocation(52.478, -8.549);
-    expect(L.circleMarker).toHaveBeenCalledTimes(1);
+    expect(L.circleMarker).toHaveBeenCalledTimes(2);
     expect(circleMock.setLatLng).toHaveBeenCalledWith([52.478, -8.549]);
   });
 

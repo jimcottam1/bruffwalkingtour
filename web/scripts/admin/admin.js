@@ -49,8 +49,9 @@ function uniqueId(base) {
 
 function initMap() {
   map = L.map('map').setView([boundary.centerLat, boundary.centerLon], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors &mdash; tiles by OpenStreetMap France',
+    subdomains: 'abc',
     maxZoom: 20,
   }).addTo(map);
 

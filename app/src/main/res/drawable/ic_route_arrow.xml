@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+
+    <!-- Chevron pointing "up" (north) in local space — MainActivity rotates
+         the marker to the route's bearing of travel, so it always points the
+         way the tour walks. -->
+    <path
+        android:fillColor="#C8922A"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M10,2 L17,15 L10,11.5 L3,15 Z"/>
+</vector>

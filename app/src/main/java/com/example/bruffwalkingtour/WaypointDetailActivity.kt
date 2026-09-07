@@ -1,6 +1,5 @@
 package com.example.bruffwalkingtour
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
@@ -77,18 +76,10 @@ class WaypointDetailActivity : AppCompatActivity() {
         val spannableString = SpannableString(fullText)
         val clickableSpan = object : ClickableSpan() {
             override fun onClick(widget: View) {
-                if (isLastWaypoint) {
-                    // Return to MainActivity with completion flag
-                    val resultIntent = Intent().apply {
-                        putExtra("show_completion", true)
-                    }
-                    setResult(RESULT_OK, resultIntent)
-                    finish()
-                } else {
-                    // Return to MainActivity to continue
-                    setResult(RESULT_OK)
-                    finish()
-                }
+                // MainActivity advances the tour on RESULT_OK and decides — from
+                // its own waypoint index — whether that was the final stop.
+                setResult(RESULT_OK)
+                finish()
             }
         }
         

@@ -2,12 +2,7 @@ package com.example.bruffwalkingtour
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.Spanned
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -42,24 +37,12 @@ class IntroActivity : AppCompatActivity() {
         // Hide action bar for cleaner intro experience
         supportActionBar?.hide()
         
-        val startTourTextView = findViewById<TextView>(R.id.start_tour_text)
-        startTourTextView.movementMethod = LinkMovementMethod.getInstance()
-        
-        val fullText = "🚀 Begin Your Bruff Heritage Adventure"
-        val spannableString = SpannableString(fullText)
-        
-        // Make the entire text clickable
-        val clickableSpan = object : ClickableSpan() {
-            override fun onClick(widget: View) {
-                // Launch the main tour activity
-                val intent = Intent(this@IntroActivity, MainActivity::class.java)
-                startActivity(intent)
-                finish() // Close intro so user can't go back to it
-            }
+        // The start CTA is a pinned bar at the bottom of the screen — the whole
+        // bar is the tap target, so a plain click listener on the view.
+        findViewById<TextView>(R.id.start_tour_text).setOnClickListener {
+            startActivity(Intent(this@IntroActivity, MainActivity::class.java))
+            finish() // Close intro so user can't go back to it
         }
-        
-        spannableString.setSpan(clickableSpan, 0, fullText.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        startTourTextView.text = spannableString
 
         findViewById<TextView>(R.id.help_link).setOnClickListener {
             startActivity(Intent(this, HelpActivity::class.java))

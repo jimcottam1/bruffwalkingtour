@@ -3,16 +3,20 @@
  *
  * Strategies:
  *  - App shell (HTML/CSS/JS/images): cache-first, network fallback
- *  - Map tiles (CARTO / OSM): stale-while-revalidate, capped at MAX_TILE_ENTRIES
+ *  - Map tiles (OSM France HOT): stale-while-revalidate, capped at MAX_TILE_ENTRIES
  *  - OSRM routing API: network-only (fallback handled in routing.js)
  *
  * Bump CACHE_VERSION to force all clients to download a fresh app shell.
  */
 
-const CACHE_VERSION = 'v1';
+// v2: basemap moved off CARTO (keyless quota → "API key" watermark tiles) to
+// OSM France HOT. Bumping evicts any cached watermark tiles.
+const CACHE_VERSION = 'v2';
 const APP_CACHE  = `bruff-app-${CACHE_VERSION}`;
 const TILE_CACHE = `bruff-tiles-${CACHE_VERSION}`;
-const MAX_TILE_ENTRIES = 200;
+// Big enough to hold the whole fixed tour area (z15–18 over ~1.5×3 km, a few
+// hundred tiles — pre-warmed by app.js when a walk starts) plus live panning.
+const MAX_TILE_ENTRIES = 1500;
 
 const APP_SHELL = [
   './',
@@ -70,7 +74,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // Map tile requests — stale-while-revalidate with size cap
-  if (url.hostname.endsWith('tile.openstreetmap.org') || url.hostname.endsWith('basemaps.cartocdn.com')) {
+  if (url.hostname.endsWith('tile.openstreetmap.fr') || url.hostname.endsWith('tile.openstreetmap.org')) {
     event.respondWith(handleTile(event.request));
     return;
   }

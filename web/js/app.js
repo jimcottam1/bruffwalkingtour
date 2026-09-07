@@ -113,6 +113,11 @@ export function initTourPage() {
     // Render immediately from the fix that got us here, rather than waiting
     // for the next GPS update (which could be a few seconds away).
     if (lastFix) renderLiveUpdate(lastFix.lat, lastFix.lon);
+
+    // Once per device, quietly pull the whole (fixed, small) tour area's tiles
+    // into the service-worker cache so the map keeps working if signal drops
+    // mid-walk and repeat visits make ~no tile requests.
+    prewarmTourTiles();
   }
 
   if (startBtn) startBtn.addEventListener('click', () => startTour(lastFix));
@@ -258,6 +263,87 @@ export function initTourPage() {
 
 function _refreshMarkers(tour) {
   addWaypointMarkers(WAYPOINTS, tour.getCurrentIndex(), tour.getVisitedIds());
+}
+
+// Marks that this device has already pre-fetched the tour-area tiles.
+const TILE_PREWARM_KEY = 'bruff_tiles_prewarmed';
+
+// Zoom range pre-fetched for offline use — 18 is already very detailed for a
+// walking pace (the map's default zoom is 17.5).
+const PREWARM_ZOOM_MIN = 15;
+const PREWARM_ZOOM_MAX = 18;
+
+/** slippy-map tile x/y for a lon/lat at a given zoom. */
+function _lonLatToTile(lon, lat, z) {
+  const n = 2 ** z;
+  const x = Math.floor(((lon + 180) / 360) * n);
+  const latRad = (lat * Math.PI) / 180;
+  const y = Math.floor(
+    ((1 - Math.asinh(Math.tan(latRad)) / Math.PI) / 2) * n,
+  );
+  return [x, y];
+}
+
+/**
+ * One-time background fetch of every tile covering the tour boundary box, so
+ * the service worker caches them and the map works offline mid-walk. Throttled
+ * to a small pool; the SW's fetch handler does the actual caching.
+ */
+function prewarmTourTiles() {
+  // Only worthwhile when a service worker is active to cache the results, and
+  // only when online. (Also keeps this out of unit/e2e runs with no SW.)
+  if (typeof navigator === 'undefined') return;
+  if (!navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+  if (navigator.onLine === false) return;
+  if (typeof fetch !== 'function') return;
+  try {
+    if (localStorage.getItem(TILE_PREWARM_KEY) === '1') return;
+  } catch {
+    return; // storage blocked — skip rather than re-fetch every visit
+  }
+
+  const halfW =
+    BOUNDARY.WIDTH_KM /
+    2 /
+    (111 * Math.cos((BOUNDARY.CENTER_LAT * Math.PI) / 180));
+  const halfH = BOUNDARY.HEIGHT_KM / 2 / 111;
+  const west = BOUNDARY.CENTER_LON - halfW;
+  const east = BOUNDARY.CENTER_LON + halfW;
+  const north = BOUNDARY.CENTER_LAT + halfH;
+  const south = BOUNDARY.CENTER_LAT - halfH;
+
+  const urls = [];
+  for (let z = PREWARM_ZOOM_MIN; z <= PREWARM_ZOOM_MAX; z++) {
+    const [xMin, yMin] = _lonLatToTile(west, north, z);
+    const [xMax, yMax] = _lonLatToTile(east, south, z);
+    for (let x = xMin; x <= xMax; x++) {
+      for (let y = yMin; y <= yMax; y++) {
+        urls.push(`https://a.tile.openstreetmap.fr/hot/${z}/${x}/${y}.png`);
+      }
+    }
+  }
+
+  let i = 0;
+  let done = 0;
+  const pump = () => {
+    if (i >= urls.length) return;
+    const url = urls[i++];
+    fetch(url)
+      .catch(() => {})
+      .finally(() => {
+        done += 1;
+        if (done === urls.length) {
+          try {
+            localStorage.setItem(TILE_PREWARM_KEY, '1');
+          } catch {
+            /* ignore */
+          }
+        }
+        pump();
+      });
+  };
+  const POOL = 4;
+  for (let k = 0; k < Math.min(POOL, urls.length); k++) pump();
 }
 
 // ---------------------------------------------------------------------------

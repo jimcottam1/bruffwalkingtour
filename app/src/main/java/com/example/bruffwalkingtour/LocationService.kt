@@ -30,7 +30,19 @@ class LocationService(private val context: Context) {
         // Average walking speed used to estimate time-to-waypoint, in metres/minute
         // (~5 km/h). Must match WALKING_SPEED_MPM in web/js/data.js.
         private const val WALKING_SPEED_MPM = 83f
+
+        // Tour progress is persisted so an interrupted session (activity
+        // recreation, process death while the user reads a stop's page) resumes
+        // where it left off instead of restarting from stop 1. Mirrors the web
+        // app's bruff_tour_state / bruff_gate_passed in sessionStorage.
+        private const val PROGRESS_PREFS = "bruff_tour_progress"
+        private const val KEY_SESSION_ACTIVE = "session_active"
+        private const val KEY_WAYPOINT_INDEX = "waypoint_index"
+        private const val KEY_LAST_ACTIVE = "last_active_at"
     }
+
+    private val progressPrefs =
+        context.getSharedPreferences(PROGRESS_PREFS, Context.MODE_PRIVATE)
 
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
@@ -50,6 +62,15 @@ class LocationService(private val context: Context) {
     private val _outsideTourArea = MutableLiveData<String?>()
     val outsideTourArea: LiveData<String?> = _outsideTourArea
 
+    /**
+     * Set to the current waypoint when the user reached it earlier (an arrival
+     * was notified) but never tapped Continue, and has since walked clearly past
+     * it toward the next stop. Lets the UI offer to advance rather than leaving
+     * navigation pointing backwards at a stop the user has already seen.
+     */
+    private val _suggestAdvance = MutableLiveData<TourWaypoint?>()
+    val suggestAdvance: LiveData<TourWaypoint?> = _suggestAdvance
+
     /** Accuracy of the last accepted GPS fix in metres, or null if no fix yet. */
     private val _locationAccuracy = MutableLiveData<Float?>()
     val locationAccuracy: LiveData<Float?> = _locationAccuracy
@@ -57,6 +78,9 @@ class LocationService(private val context: Context) {
     private var currentTour: WalkingTour? = null
     private var currentWaypointIndex = 0
     private var lastNotifiedWaypoint: TourWaypoint? = null
+    // Waypoint index for which an arrival has been announced this session — used
+    // to detect "arrived but walked on without continuing" (see checkProximity).
+    private var arrivalNotifiedForIndex = -1
     private var locationStartTime = 0L
 
     private val locationRequest = LocationRequest.Builder(
@@ -159,10 +183,69 @@ class LocationService(private val context: Context) {
     
     fun setCurrentTour(tour: WalkingTour) {
         currentTour = tour
-        currentWaypointIndex = 0
+        // Resume mid-tour if a previous session was interrupted (activity
+        // recreation / process death). A fresh start or a completed tour has no
+        // active session, so it begins at the first stop.
+        val savedIndex = progressPrefs.getInt(KEY_WAYPOINT_INDEX, 0)
+        currentWaypointIndex =
+            if (hasActiveSession() && savedIndex in tour.waypoints.indices) savedIndex else 0
         _tourCompleted.value = false
         _nearbyWaypoint.value = null // Clear any stuck "arrived" state
+        _suggestAdvance.value = null
         lastNotifiedWaypoint = null // Reset notification tracking
+        arrivalNotifiedForIndex = -1
+        persistProgress()
+    }
+
+    /**
+     * Marks that the user has passed the boundary gate and is now on the walk.
+     * From this point an interrupted session resumes instead of re-gating.
+     */
+    fun beginTourSession() {
+        progressPrefs.edit()
+            .putBoolean(KEY_SESSION_ACTIVE, true)
+            .putLong(KEY_LAST_ACTIVE, System.currentTimeMillis())
+            .apply()
+    }
+
+    /** True when a tour is part-way through and could be resumed. */
+    fun hasActiveSession(): Boolean =
+        progressPrefs.getBoolean(KEY_SESSION_ACTIVE, false)
+
+    /** Waypoint index a resumed session would start at (0-based). */
+    fun savedWaypointIndex(): Int = progressPrefs.getInt(KEY_WAYPOINT_INDEX, 0)
+
+    /**
+     * Milliseconds since the tour was last actively used. A short gap means an
+     * interruption to resume through silently; a long gap means the user should
+     * be asked whether to resume or start over.
+     */
+    fun millisSinceLastActive(): Long {
+        val t = progressPrefs.getLong(KEY_LAST_ACTIVE, 0L)
+        return if (t == 0L) Long.MAX_VALUE else System.currentTimeMillis() - t
+    }
+
+    /** Refresh the "last active" stamp — call while the tour screen is in use. */
+    fun touchSession() {
+        if (hasActiveSession()) {
+            progressPrefs.edit().putLong(KEY_LAST_ACTIVE, System.currentTimeMillis()).apply()
+        }
+    }
+
+    /** Clears persisted progress — call on completion and on an explicit restart. */
+    fun clearSavedProgress() {
+        progressPrefs.edit()
+            .putBoolean(KEY_SESSION_ACTIVE, false)
+            .remove(KEY_WAYPOINT_INDEX)
+            .remove(KEY_LAST_ACTIVE)
+            .apply()
+    }
+
+    private fun persistProgress() {
+        progressPrefs.edit()
+            .putInt(KEY_WAYPOINT_INDEX, currentWaypointIndex)
+            .putLong(KEY_LAST_ACTIVE, System.currentTimeMillis())
+            .apply()
     }
     
     fun getCurrentWaypoint(): TourWaypoint? {
@@ -182,10 +265,13 @@ class LocationService(private val context: Context) {
             if (currentWaypointIndex < tour.waypoints.size - 1) {
                 currentWaypointIndex++
                 lastNotifiedWaypoint = null // Reset for new waypoint
+                arrivalNotifiedForIndex = -1
                 _nearbyWaypoint.value = null // Clear arrival state immediately
-                
+                _suggestAdvance.value = null
+                persistProgress()
+
                 LogUtils.d("LocationService", "Moved to waypoint ${currentWaypointIndex + 1}: ${getCurrentWaypoint()?.name}")
-                
+
                 // Force immediate recalculation with current location
                 _currentLocation.value?.let { location ->
                     LogUtils.d("LocationService", "Recalculating distances for new waypoint")
@@ -194,6 +280,7 @@ class LocationService(private val context: Context) {
                 }
             } else {
                 LogUtils.d("LocationService", "Tour completed!")
+                clearSavedProgress()
                 _tourCompleted.value = true
             }
         }
@@ -244,7 +331,9 @@ class LocationService(private val context: Context) {
             if (lastNotifiedWaypoint != currentWaypoint && _nearbyWaypoint.value == null) {
                 _nearbyWaypoint.value = currentWaypoint
                 lastNotifiedWaypoint = currentWaypoint
+                arrivalNotifiedForIndex = currentWaypointIndex
             }
+            _suggestAdvance.value = null
         } else if (distance > currentWaypoint.proximityRadius + EXIT_HYSTERESIS_M) {
             // Clear only once the user has moved clearly outside the radius (with a
             // hysteresis margin) - avoids re-firing the arrival toast from GPS jitter
@@ -252,6 +341,23 @@ class LocationService(private val context: Context) {
             if (_nearbyWaypoint.value == currentWaypoint) {
                 _nearbyWaypoint.value = null
                 lastNotifiedWaypoint = null
+            }
+
+            // "Arrived here but never tapped Continue, and now walking on toward
+            // the next stop" — surface a one-shot advance suggestion so the user
+            // isn't left with navigation pointing back at a visited stop.
+            val next = getNextWaypoint()
+            if (arrivalNotifiedForIndex == currentWaypointIndex &&
+                next != null &&
+                distance > currentWaypoint.proximityRadius * 2
+            ) {
+                val distToNext = calculateDistance(
+                    currentLocation.latitude, currentLocation.longitude,
+                    next.latitude, next.longitude
+                )
+                if (distToNext < distance && _suggestAdvance.value != currentWaypoint) {
+                    _suggestAdvance.value = currentWaypoint
+                }
             }
         }
     }
