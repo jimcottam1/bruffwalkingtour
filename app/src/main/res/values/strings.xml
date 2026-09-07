@@ -50,6 +50,7 @@
 
     <!-- Live navigation -->
     <string name="nav_locating">Finding your position…</string>
+    <string name="map_progress">Stop %1$d of %2$d</string>
     <string name="tour_complete">Walk complete</string>
     <string name="well_done">You\'ve visited every stop.</string>
     <string name="tour_complete_celebration">Walk complete</string>

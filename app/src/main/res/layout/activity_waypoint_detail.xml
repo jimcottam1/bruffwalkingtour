@@ -37,7 +37,7 @@
                 android:layout_marginBottom="@dimen/space_lg"
                 android:contentDescription="@string/detail_toolbar_title"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_launcher_foreground"
+                android:src="@drawable/img_waypoint_placeholder"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.Bruff.Hero" />
 
             <TextView

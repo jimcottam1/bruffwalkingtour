@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown while a stop's photo loads, or when it has none. Branded, not clipart. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="160dp"
+    android:viewportWidth="240"
+    android:viewportHeight="160">
+
+    <path android:fillColor="#E7DEC9" android:pathData="M0,0h240v160h-240z" />
+
+    <!-- monument -->
+    <path android:fillColor="#C8922A" android:pathData="M120,44 L129,66 L111,66 Z" />
+    <path android:fillColor="#B98426" android:pathData="M113,66 L127,66 L130,120 L110,120 Z" />
+    <path android:fillColor="#C8922A" android:pathData="M104,120 L136,120 L136,128 L104,128 Z" />
+    <path android:fillColor="#C8922A" android:pathData="M98,128 L142,128 L142,138 L98,138 Z" />
+    <path android:fillColor="#E7DEC9" android:pathData="M112,76 L128,76 L128,79 L112,79 Z" />
+</vector>

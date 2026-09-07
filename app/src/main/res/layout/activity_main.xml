@@ -32,6 +32,20 @@
         android:text="@string/recenter_button"
         android:visibility="gone" />
 
+    <TextView
+        android:id="@+id/progress_chip"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/map_chip_height"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="@dimen/space_md"
+        android:background="@drawable/bg_map_pill"
+        android:gravity="center"
+        android:paddingHorizontal="@dimen/space_md"
+        android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
+        android:textColor="@color/on_dark"
+        tools:text="Stop 1 of 4" />
+
     <LinearLayout
         android:id="@+id/bottom_info_bar"
         android:layout_width="match_parent"
@@ -143,7 +157,7 @@
             android:layout_height="88dp"
             android:layout_marginBottom="@dimen/space_lg"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_launcher_foreground" />
+            android:src="@drawable/ic_logo" />
 
         <TextView
             android:id="@+id/gate_status_text"

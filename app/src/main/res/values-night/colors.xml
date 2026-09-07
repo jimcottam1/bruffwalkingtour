@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark theme: the web app's ink-first palette. Only the page/surface/text
+     roles flip; brand gold, the always-dark map chrome (ink / on_dark / scrim)
+     and the trail marker colours are shared with the light theme. -->
+<resources>
+    <color name="parchment">#17110A</color>      <!-- page background -->
+    <color name="surface">#241A0E</color>        <!-- cards -->
+    <color name="on_light">#F1E9DB</color>       <!-- primary text -->
+    <color name="on_light_muted">#A99A80</color> <!-- secondary text -->
+    <color name="hairline">#3B2F1F</color>       <!-- dividers / card outlines -->
+
+    <color name="brand_gold_dark">#E8B85A</color><!-- text-button ink on dark reads better lighter -->
+    <color name="trail_upcoming">#8A7A5E</color>
+</resources>

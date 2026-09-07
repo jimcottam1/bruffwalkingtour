@@ -126,6 +126,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recenterButton: Button
     private lateinit var arrivalCard: View
     private lateinit var arrivalCardTitle: TextView
+    private lateinit var progressChip: TextView
     // True while the map auto-centres on GPS fixes. Suspended as soon as the
     // user touches the map (drag/pinch), so their gesture isn't fought by the
     // next location update; restored by tapping recenterButton.
@@ -389,6 +390,7 @@ class MainActivity : AppCompatActivity() {
         recenterButton = findViewById(R.id.recenter_button)
         arrivalCard = findViewById(R.id.arrival_card)
         arrivalCardTitle = findViewById(R.id.arrival_card_title)
+        progressChip = findViewById(R.id.progress_chip)
 
         // Enable clickable links in navigation text
         navigationInstructionText.movementMethod = LinkMovementMethod.getInstance()
@@ -573,6 +575,7 @@ class MainActivity : AppCompatActivity() {
             LogUtils.d("MainActivity", "Tour loaded: ${tour.name} with ${tour.waypoints.size} waypoints")
             locationService.setCurrentTour(tour)
             addWaypointMarkersToMap(tour.waypoints)
+            updateAllWaypointMarkers() // also seeds the "Stop N of M" chip
             // Draw L-shaped placeholder routes immediately, then upgrade to OSRM road routes
             drawRouteOnMap(tour.waypoints)
             drawRoutesAsync(tour.waypoints)
@@ -881,6 +884,9 @@ class MainActivity : AppCompatActivity() {
                 updateWaypointMarkerIcon(marker, index)
                 updateMarkerHoverHelp(marker, waypoints[index], index)
             }
+            val current = (locationService.getCurrentWaypointIndex() + 1)
+                .coerceAtMost(waypoints.size)
+            progressChip.text = getString(R.string.map_progress, current, waypoints.size)
         }
         mapView.invalidate()
     }

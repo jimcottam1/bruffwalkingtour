@@ -1,8 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- App theme: warm parchment page, heritage-gold brand, no framework action
-         bar (screens that need a top bar carry their own MaterialToolbar). -->
-    <style name="Theme.Bruffwalkingtour" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <!-- App theme: warm parchment page (ink at night — see values-night/colors),
+         heritage-gold brand, no framework action bar (screens that need a top
+         bar carry their own MaterialToolbar). -->
+    <style name="Theme.Bruffwalkingtour" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/brand_gold</item>
         <item name="colorPrimaryVariant">@color/brand_gold_dark</item>
         <item name="colorOnPrimary">@color/white</item>
@@ -22,6 +23,7 @@
         <item name="materialButtonStyle">@style/Widget.Bruff.Button</item>
         <item name="materialCardViewStyle">@style/Widget.Bruff.Card</item>
         <item name="toolbarStyle">@style/Widget.Bruff.Toolbar</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Bruff.Activity</item>
     </style>
 
     <!-- For the handful of screens (Help, waypoint detail, admin) that want a

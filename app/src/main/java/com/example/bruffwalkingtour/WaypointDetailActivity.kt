@@ -66,28 +66,28 @@ class WaypointDetailActivity : AppCompatActivity() {
                         imageView.setImageResource(resourceId)
                     } else {
                         LogUtils.e("WaypointDetail", "Resource not found: $resourceName")
-                        imageView.setImageResource(R.drawable.ic_launcher_foreground)
+                        imageView.setImageResource(R.drawable.img_waypoint_placeholder)
                     }
                 } catch (e: Exception) {
                     LogUtils.e("WaypointDetail", "Error loading local resource for: $name", e)
-                    imageView.setImageResource(R.drawable.ic_launcher_foreground)
+                    imageView.setImageResource(R.drawable.img_waypoint_placeholder)
                 }
             } else {
                 Picasso.get()
                     .load(imageUrl)
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
+                    .placeholder(R.drawable.img_waypoint_placeholder)
+                    .error(R.drawable.img_waypoint_placeholder)
                     .into(imageView, object : Callback {
                         override fun onSuccess() {}
 
                         override fun onError(e: Exception?) {
                             LogUtils.e("WaypointDetail", "Failed to load image for: $name")
-                            imageView.setImageResource(R.drawable.ic_launcher_foreground)
+                            imageView.setImageResource(R.drawable.img_waypoint_placeholder)
                         }
                     })
             }
         } else {
-            imageView.setImageResource(R.drawable.ic_launcher_foreground)
+            imageView.setImageResource(R.drawable.img_waypoint_placeholder)
         }
     }
 
