@@ -1,6 +1,7 @@
 package com.example.bruffwalkingtour
 
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -22,8 +23,10 @@ class WaypointDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_waypoint_detail)
+        NarrationPlayer.init(this)
         setupViews()
         loadWaypointData()
+        setupNarration()
     }
 
     private fun setupViews() {
@@ -38,9 +41,30 @@ class WaypointDetailActivity : AppCompatActivity() {
         continueButton.setOnClickListener {
             // MainActivity advances the tour on RESULT_OK and decides — from its
             // own waypoint index — whether that was the final stop.
+            NarrationPlayer.stop()
             setResult(RESULT_OK)
             finish()
         }
+    }
+
+    /** "Listen" button — device text-to-speech reads the stop's history aloud. */
+    private fun setupNarration() {
+        val button = findViewById<MaterialButton>(R.id.narration_button)
+        val script = listOfNotNull(
+            intent.getStringExtra(EXTRA_WAYPOINT_HISTORICAL_INFO),
+            intent.getStringExtra(EXTRA_WAYPOINT_DESCRIPTION),
+        ).firstOrNull { it.isNotBlank() }.orEmpty()
+
+        NarrationPlayer.available.observe(this) { available ->
+            button.visibility = if (available && script.isNotBlank()) View.VISIBLE else View.GONE
+        }
+        NarrationPlayer.speaking.observe(this) { speaking ->
+            button.setText(if (speaking) R.string.narration_stop else R.string.narration_listen)
+            button.setIconResource(
+                if (speaking) R.drawable.ic_stop_small else R.drawable.ic_play_small,
+            )
+        }
+        button.setOnClickListener { NarrationPlayer.toggle(script) }
     }
 
     private fun loadWaypointData() {

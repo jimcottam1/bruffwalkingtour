@@ -55,6 +55,18 @@
                 android:textAppearance="@style/TextAppearance.Bruff.Body"
                 tools:text="Heritage centre in a former courthouse." />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/narration_button"
+                style="@style/Widget.Bruff.Button.Outlined"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/narration_listen"
+                android:visibility="gone"
+                app:icon="@drawable/ic_play_small"
+                app:iconGravity="textStart"
+                tools:visibility="visible" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

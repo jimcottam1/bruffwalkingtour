@@ -126,6 +126,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recenterButton: Button
     private lateinit var arrivalCard: View
     private lateinit var arrivalCardTitle: TextView
+    private lateinit var arrivalCardListen: com.google.android.material.button.MaterialButton
     private lateinit var progressChip: TextView
     // True while the map auto-centres on GPS fixes. Suspended as soon as the
     // user touches the map (drag/pinch), so their gesture isn't fought by the
@@ -240,6 +241,7 @@ class MainActivity : AppCompatActivity() {
         setupMap()
         setupLocationService()
         setupRouteService()
+        NarrationPlayer.init(this)
         createArrivalNotificationChannel()
         requestNotificationPermissionIfNeeded()
 
@@ -390,6 +392,7 @@ class MainActivity : AppCompatActivity() {
         recenterButton = findViewById(R.id.recenter_button)
         arrivalCard = findViewById(R.id.arrival_card)
         arrivalCardTitle = findViewById(R.id.arrival_card_title)
+        arrivalCardListen = findViewById(R.id.arrival_card_listen)
         progressChip = findViewById(R.id.progress_chip)
 
         // Enable clickable links in navigation text
@@ -404,8 +407,21 @@ class MainActivity : AppCompatActivity() {
             nearbyWaypoint?.let { showWaypointDetails(it) }
         }
         findViewById<Button>(R.id.arrival_card_dismiss).setOnClickListener {
-            arrivalCard.visibility = View.GONE
+            hideArrivalCard()
         }
+        arrivalCardListen.setOnClickListener {
+            val wp = nearbyWaypoint ?: return@setOnClickListener
+            NarrationPlayer.toggle(narrationScriptFor(wp))
+        }
+        NarrationPlayer.speaking.observe(this) { speaking ->
+            arrivalCardListen.setText(
+                if (speaking) R.string.narration_stop else R.string.narration_play,
+            )
+            arrivalCardListen.setIconResource(
+                if (speaking) R.drawable.ic_stop_small else R.drawable.ic_play_small,
+            )
+        }
+        NarrationPlayer.available.observe(this) { refreshArrivalListenVisibility() }
         recenterButton.setOnClickListener {
             followMode = true
             recenterButton.visibility = View.GONE
@@ -1081,11 +1097,29 @@ class MainActivity : AppCompatActivity() {
 
     private fun showArrivalCard(waypoint: TourWaypoint) {
         arrivalCardTitle.text = getString(R.string.arrival_card_title, waypoint.name)
+        refreshArrivalListenVisibility()
         arrivalCard.visibility = View.VISIBLE
     }
 
     private fun hideArrivalCard() {
-        if (::arrivalCard.isInitialized) arrivalCard.visibility = View.GONE
+        if (!::arrivalCard.isInitialized) return
+        val wasVisible = arrivalCard.visibility == View.VISIBLE
+        arrivalCard.visibility = View.GONE
+        // Only cut narration that was driven from this card — not a clip the user
+        // is still listening to on the detail screen.
+        if (wasVisible) NarrationPlayer.stop()
+    }
+
+    /** History text preferred, falling back to the short description. */
+    private fun narrationScriptFor(waypoint: TourWaypoint): String =
+        waypoint.historicalInfo?.takeIf { it.isNotBlank() } ?: waypoint.description
+
+    private fun refreshArrivalListenVisibility() {
+        if (!::arrivalCardListen.isInitialized) return
+        val wp = nearbyWaypoint
+        val show = NarrationPlayer.available.value == true &&
+            wp != null && narrationScriptFor(wp).isNotBlank()
+        arrivalCardListen.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     private fun createArrivalNotificationChannel() {

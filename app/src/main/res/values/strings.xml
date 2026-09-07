@@ -77,6 +77,11 @@
     <string name="detail_continue">Continue</string>
     <string name="detail_finish">Finish the walk</string>
 
+    <!-- Audio guide (Phase 1: device text-to-speech reads the history) -->
+    <string name="narration_listen">Listen</string>
+    <string name="narration_play">Play the story</string>
+    <string name="narration_stop">Stop</string>
+
     <!-- Completion screen -->
     <string name="complete_title">You\'ve walked the trail</string>
     <string name="complete_subtitle">Four historic sites of Bruff, on foot. We hope you enjoyed the walk.</string>
