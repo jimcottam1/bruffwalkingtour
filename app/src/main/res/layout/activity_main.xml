@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,30 +11,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/help_button"
+        style="@style/Widget.Bruff.MapPill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_margin="12dp"
-        android:paddingHorizontal="12dp"
-        android:background="#CC000000"
-        android:textColor="@android:color/white"
-        android:textAllCaps="false"
+        android:layout_margin="@dimen/space_md"
         android:text="@string/help_button" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/recenter_button"
+        style="@style/Widget.Bruff.MapPill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_margin="12dp"
-        android:paddingHorizontal="12dp"
-        android:background="#CC000000"
-        android:textColor="@android:color/white"
-        android:textAllCaps="false"
+        android:layout_margin="@dimen/space_md"
         android:text="@string/recenter_button"
         android:visibility="gone" />
 
@@ -42,143 +37,149 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#CC000000"
+        android:background="@drawable/bg_map_panel"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="@dimen/screen_margin"
+        android:paddingTop="@dimen/space_md"
+        android:paddingBottom="@dimen/space_lg">
 
         <TextView
             android:id="@+id/navigation_instruction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Loading navigation..."
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:text="@string/nav_locating"
+            android:textAppearance="@style/TextAppearance.Bruff.NavPrimary"
+            tools:text="Head north to Sean Wall Monument" />
 
         <TextView
             android:id="@+id/distance_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="GPS locating… Please wait"
-            android:textColor="@android:color/white"
-            android:textSize="14sp" />
+            android:layout_marginTop="@dimen/space_xs"
+            android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
+            tools:text="220 m · 3 min" />
 
         <TextView
             android:id="@+id/gps_accuracy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="GPS: locating…"
-            android:textColor="#80FFFFFF"
-            android:textSize="11sp" />
+            android:alpha="0.7"
+            android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
+            android:textSize="11sp"
+            tools:text="GPS ±8 m" />
 
     </LinearLayout>
 
     <!-- Arrival card — shown the moment the user reaches a stop, sits just above
          the navigation bar with an explicit Explore action. -->
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/arrival_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/bottom_info_bar"
-        android:layout_margin="12dp"
-        android:background="#F2FFFFFF"
-        android:elevation="8dp"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/arrival_card_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/arrival_card_title_default"
-            android:textColor="#1A1208"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="@string/arrival_card_hint"
-            android:textColor="#5A4A2A"
-            android:textSize="13sp" />
+        android:layout_margin="@dimen/space_md"
+        android:visibility="gone"
+        app:cardElevation="6dp"
+        app:contentPadding="@dimen/space_md">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="end"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/arrival_card_dismiss"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/arrival_card_title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/arrival_card_dismiss"
-                android:textAllCaps="false"
-                android:textColor="#5A4A2A" />
+                android:text="@string/arrival_card_title_default"
+                android:textAppearance="@style/TextAppearance.Bruff.Title" />
 
-            <Button
-                android:id="@+id/arrival_card_button"
-                android:layout_width="wrap_content"
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/arrival_card_explore"
-                android:textAllCaps="false" />
+                android:layout_marginTop="2dp"
+                android:text="@string/arrival_card_hint"
+                android:textAppearance="@style/TextAppearance.Bruff.BodyMuted" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/arrival_card_dismiss"
+                    style="@style/Widget.Bruff.Button.Text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/arrival_card_dismiss" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/arrival_card_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:text="@string/arrival_card_explore" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-    </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
         android:id="@+id/boundary_gate_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/purple_700"
-        android:orientation="vertical"
+        android:background="@color/ink"
         android:gravity="center"
-        android:padding="32dp">
+        android:orientation="vertical"
+        android:padding="@dimen/space_xl">
+
+        <ImageView
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_marginBottom="@dimen/space_lg"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/ic_launcher_foreground" />
 
         <TextView
             android:id="@+id/gate_status_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:text="@string/gate_locating"
-            android:textColor="@android:color/white"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center" />
+            android:textColor="@color/on_dark"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/gate_distance_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="#CCFFFFFF"
-            android:textSize="15sp"
-            android:gravity="center" />
+            android:layout_marginTop="@dimen/space_sm"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
+            android:textSize="15sp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/start_tour_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/space_lg"
+            android:minWidth="220dp"
             android:text="@string/start_tour_button"
             android:visibility="gone" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/gate_override_button"
+            style="@style/Widget.Bruff.Button.TextOnDark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:backgroundTint="#66FFFFFF"
+            android:layout_marginTop="@dimen/space_xs"
             android:text="@string/gate_start_anyway"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
             android:visibility="gone" />
 
     </LinearLayout>

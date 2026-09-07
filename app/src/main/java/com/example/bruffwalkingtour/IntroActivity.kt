@@ -58,7 +58,7 @@ class IntroActivity : AppCompatActivity() {
         val waypoints = BruffTourData.getDefaultTour().waypoints
 
         findViewById<TextView>(R.id.locations_count_text).text =
-            "📍\n${waypoints.size} locations"
+            getString(R.string.intro_stat_stops, waypoints.size)
 
         val container = findViewById<LinearLayout>(R.id.highlights_container)
         val inflater = LayoutInflater.from(this)

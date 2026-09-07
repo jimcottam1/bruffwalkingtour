@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
+    <!-- Heritage palette — matches the web app's design tokens (web/css/main.css) -->
+    <color name="brand_gold">#C8922A</color>
+    <color name="brand_gold_dark">#9A6E1E</color>
+    <color name="brand_gold_light">#E8B85A</color>
+
+    <color name="ink">#1A1208</color>          <!-- darkest warm brown: dark surfaces, status bar -->
+    <color name="ink_surface">#2D2010</color>   <!-- raised surface on dark -->
+    <color name="parchment">#F5F0E8</color>     <!-- light page background -->
+    <color name="surface">#FFFFFF</color>       <!-- cards on the light page -->
+
+    <color name="on_light">#241B10</color>      <!-- primary text on light -->
+    <color name="on_light_muted">#7A6A52</color><!-- secondary text on light -->
+    <color name="on_dark">#F5F0E8</color>
+    <color name="on_dark_muted">#B7A88E</color>
+    <color name="hairline">#E4DAC8</color>      <!-- dividers / card outlines on light -->
+
+    <color name="trail_visited">#4A7C59</color>
+    <color name="trail_upcoming">#B9A98C</color>
+    <color name="warn">#E07B39</color>
+
+    <color name="scrim">#D91A1208</color>       <!-- ~85% ink: map overlays -->
+
     <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
 </resources>

@@ -1,16 +1,36 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.Bruffwalkingtour" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
+
+    <!-- App theme: warm parchment page, heritage-gold brand, no framework action
+         bar (screens that need a top bar carry their own MaterialToolbar). -->
+    <style name="Theme.Bruffwalkingtour" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/brand_gold</item>
+        <item name="colorPrimaryVariant">@color/brand_gold_dark</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+        <item name="colorSecondary">@color/brand_gold</item>
+        <item name="colorSecondaryVariant">@color/brand_gold_dark</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <item name="android:colorBackground">@color/parchment</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_light</item>
+        <item name="colorError">@color/warn</item>
+
+        <item name="android:statusBarColor">@color/ink</item>
+        <item name="android:navigationBarColor">@color/ink</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <item name="materialButtonStyle">@style/Widget.Bruff.Button</item>
+        <item name="materialCardViewStyle">@style/Widget.Bruff.Card</item>
+        <item name="toolbarStyle">@style/Widget.Bruff.Toolbar</item>
     </style>
+
+    <!-- For the handful of screens (Help, waypoint detail, admin) that want a
+         real top bar with an up affordance. -->
+    <style name="Theme.Bruffwalkingtour.WithActionBar" parent="Theme.Bruffwalkingtour">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
+        <item name="colorPrimary">@color/ink</item>
+    </style>
+
 </resources>

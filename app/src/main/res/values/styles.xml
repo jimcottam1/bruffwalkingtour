@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ===================== Type scale ===================== -->
+
+    <style name="TextAppearance.Bruff.Display" parent="TextAppearance.MaterialComponents.Headline4">
+        <item name="android:textColor">@color/on_light</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:lineSpacingMultiplier">1.15</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.Bruff.Headline" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@color/on_light</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="TextAppearance.Bruff.Title" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/on_light</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">17sp</item>
+    </style>
+
+    <style name="TextAppearance.Bruff.Body" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/on_light</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingMultiplier">1.4</item>
+    </style>
+
+    <style name="TextAppearance.Bruff.BodyMuted" parent="TextAppearance.Bruff.Body">
+        <item name="android:textColor">@color/on_light_muted</item>
+    </style>
+
+    <style name="TextAppearance.Bruff.Label" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/on_light_muted</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <!-- Live navigation readout on the dark map panel -->
+    <style name="TextAppearance.Bruff.NavPrimary" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/on_dark</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="TextAppearance.Bruff.NavSecondary" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/on_dark_muted</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- ===================== Buttons ===================== -->
+
+    <style name="Widget.Bruff.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/radius_md</item>
+        <item name="backgroundTint">@color/brand_gold</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="rippleColor">@color/brand_gold_light</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.Bruff.Button.Outlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/radius_md</item>
+        <item name="android:textColor">@color/brand_gold_dark</item>
+        <item name="strokeColor">@color/brand_gold</item>
+        <item name="rippleColor">@color/brand_gold_light</item>
+    </style>
+
+    <style name="Widget.Bruff.Button.Text" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/brand_gold_dark</item>
+        <item name="rippleColor">@color/brand_gold_light</item>
+    </style>
+
+    <style name="Widget.Bruff.Button.TextOnDark" parent="Widget.Bruff.Button.Text">
+        <item name="android:textColor">@color/brand_gold_light</item>
+    </style>
+
+    <!-- Floating map control (Help, Re-centre): dark rounded pill -->
+    <style name="Widget.Bruff.MapPill" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/on_dark</item>
+        <item name="backgroundTint">@color/scrim</item>
+        <item name="cornerRadius">@dimen/radius_lg</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">@dimen/map_chip_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingHorizontal">@dimen/space_md</item>
+        <item name="rippleColor">@color/brand_gold_light</item>
+    </style>
+
+    <!-- ===================== Surfaces ===================== -->
+
+    <style name="Widget.Bruff.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="cardCornerRadius">@dimen/radius_md</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/hairline</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="contentPadding">@dimen/space_md</item>
+    </style>
+
+    <style name="Widget.Bruff.Toolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="android:background">@color/ink</item>
+        <item name="titleTextColor">@color/on_dark</item>
+        <item name="navigationIconTint">@color/on_dark</item>
+        <item name="titleTextAppearance">@style/TextAppearance.Bruff.Title</item>
+    </style>
+
+    <!-- Circular numbered badge used in list rows -->
+    <style name="Widget.Bruff.Badge" parent="">
+        <item name="android:layout_width">@dimen/badge_size</item>
+        <item name="android:layout_height">@dimen/badge_size</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_badge</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <!-- Small stat cell: big value over a quiet label -->
+    <style name="TextAppearance.Bruff.StatValue" parent="TextAppearance.Bruff.Title">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="ShapeAppearance.Bruff.Hero" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_md</item>
+    </style>
+
+    <style name="StatCell">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingHorizontal">@dimen/space_xs</item>
+    </style>
+
+    <style name="HelpSectionTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/space_lg</item>
+        <item name="android:layout_marginBottom">@dimen/space_xs</item>
+        <item name="android:textAppearance">@style/TextAppearance.Bruff.Title</item>
+    </style>
+
+    <style name="HelpSectionBody">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.Bruff.Body</item>
+    </style>
+
+</resources>

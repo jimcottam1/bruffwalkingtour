@@ -4,6 +4,7 @@
     android:id="@+id/help_scroll_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     tools:context=".HelpActivity">
 
@@ -11,105 +12,58 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingHorizontal="@dimen/screen_margin"
+        android:paddingTop="@dimen/space_lg"
+        android:paddingBottom="@dimen/space_xl">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="@dimen/space_lg"
             android:text="@string/help_intro"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Bruff.Body" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/help_section_getting_started_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            style="@style/HelpSectionTitle"
+            android:text="@string/help_section_getting_started_title" />
+        <TextView
+            style="@style/HelpSectionBody"
+            android:text="@string/help_section_getting_started_body" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/help_section_getting_started_body"
-            android:textSize="15sp" />
+            style="@style/HelpSectionTitle"
+            android:text="@string/help_section_start_title" />
+        <TextView
+            style="@style/HelpSectionBody"
+            android:text="@string/help_section_start_body" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/help_section_start_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            style="@style/HelpSectionTitle"
+            android:text="@string/help_section_route_title" />
+        <TextView
+            style="@style/HelpSectionBody"
+            android:text="@string/help_section_route_body" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/help_section_start_body"
-            android:textSize="15sp" />
+            style="@style/HelpSectionTitle"
+            android:text="@string/help_section_arrival_title" />
+        <TextView
+            style="@style/HelpSectionBody"
+            android:text="@string/help_section_arrival_body" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/help_section_route_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            style="@style/HelpSectionTitle"
+            android:text="@string/help_section_map_title" />
+        <TextView
+            style="@style/HelpSectionBody"
+            android:text="@string/help_section_map_body" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/help_section_route_body"
-            android:textSize="15sp" />
-
+            style="@style/HelpSectionTitle"
+            android:text="@string/help_section_tips_title" />
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/help_section_arrival_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/help_section_arrival_body"
-            android:textSize="15sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/help_section_map_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/help_section_map_body"
-            android:textSize="15sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/help_section_tips_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/help_section_tips_body"
-            android:textSize="15sp" />
+            style="@style/HelpSectionBody"
+            android:text="@string/help_section_tips_body" />
 
     </LinearLayout>
 

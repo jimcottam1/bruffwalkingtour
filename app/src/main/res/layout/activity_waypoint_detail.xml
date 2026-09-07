@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context=".WaypointDetailActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:title="@string/detail_toolbar_title" />
 
     <ScrollView
         android:id="@+id/waypoint_scroll_view"
@@ -17,65 +26,59 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingHorizontal="@dimen/screen_margin"
+            android:paddingTop="@dimen/space_md"
+            android:paddingBottom="@dimen/space_lg">
 
-        <ImageView
-            android:id="@+id/waypoint_image"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="Waypoint image"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_launcher_foreground" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/waypoint_image"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/hero_height"
+                android:layout_marginBottom="@dimen/space_lg"
+                android:contentDescription="@string/detail_toolbar_title"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_foreground"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Bruff.Hero" />
 
-        <TextView
-            android:id="@+id/waypoint_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Waypoint Name"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/waypoint_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Bruff.Headline"
+                tools:text="Thomas Fitzgerald Centre" />
 
-        <TextView
-            android:id="@+id/waypoint_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Waypoint description goes here..."
-            android:textSize="16sp" />
+            <TextView
+                android:id="@+id/waypoint_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:textAppearance="@style/TextAppearance.Bruff.Body"
+                tools:text="Heritage centre in a former courthouse." />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Historical Information"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_lg"
+                android:layout_marginBottom="@dimen/space_xs"
+                android:text="@string/detail_history_title"
+                android:textAppearance="@style/TextAppearance.Bruff.Title" />
 
             <TextView
                 android:id="@+id/waypoint_historical_info"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                android:text="Historical information about this location..."
-                android:textSize="14sp" />
+                android:textAppearance="@style/TextAppearance.Bruff.Body"
+                tools:text="Historical information about this location." />
 
         </LinearLayout>
 
     </ScrollView>
 
-    <TextView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/continue_tour_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:layout_marginBottom="80dp"
-        android:gravity="center"
-        android:text="➡️ Continue Your Bruff Journey"
-        android:textColor="@color/design_default_color_primary"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:padding="16dp" />
+        android:layout_margin="@dimen/screen_margin"
+        android:text="@string/detail_continue" />
 
 </LinearLayout>

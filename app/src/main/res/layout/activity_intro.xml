@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical"
     tools:context=".IntroActivity">
 
@@ -17,92 +18,109 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:paddingHorizontal="@dimen/screen_margin"
+            android:paddingTop="@dimen/space_xl"
+            android:paddingBottom="@dimen/space_lg">
 
             <ImageView
                 android:id="@+id/app_logo"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="24dp"
-                android:contentDescription="Bruff Heritage Trail Logo"
+                android:layout_marginBottom="@dimen/space_lg"
+                android:contentDescription="@string/app_name"
                 android:src="@drawable/ic_launcher_foreground" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
                 android:gravity="center"
-                android:text="Bruff Heritage Trail"
-                android:textColor="@android:color/black"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                android:text="@string/intro_title"
+                android:textAppearance="@style/TextAppearance.Bruff.Display" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="@dimen/space_sm"
                 android:gravity="center"
-                android:text="Discover the rich history and beautiful architecture of Bruff town"
-                android:textColor="@android:color/darker_gray"
-                android:textSize="16sp" />
+                android:text="@string/intro_tagline"
+                android:textAppearance="@style/TextAppearance.Bruff.BodyMuted" />
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/help_link"
+                style="@style/Widget.Bruff.Button.Text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="24dp"
-                android:padding="8dp"
-                android:text="@string/help_button"
-                android:textColor="@color/design_default_color_primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="@string/help_button" />
 
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:orientation="horizontal">
+                android:layout_marginTop="@dimen/space_md"
+                app:contentPadding="@dimen/space_md">
 
-                <TextView
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="⏱️\n90 minutes"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/locations_count_text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="📍\n4 locations"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    <LinearLayout style="@style/StatCell">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/intro_stat_time"
+                            android:textAppearance="@style/TextAppearance.Bruff.StatValue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="@string/intro_stat_time_label"
+                            android:textAppearance="@style/TextAppearance.Bruff.Label" />
+                    </LinearLayout>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="🚶\nEasy walk"
-                    android:textColor="@android:color/black"
-                    android:textSize="14sp" />
+                    <LinearLayout style="@style/StatCell">
+                        <TextView
+                            android:id="@+id/locations_count_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Bruff.StatValue"
+                            tools:text="4 stops" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="@string/intro_stat_stops_label"
+                            android:textAppearance="@style/TextAppearance.Bruff.Label" />
+                    </LinearLayout>
 
-            </LinearLayout>
+                    <LinearLayout style="@style/StatCell">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/intro_stat_effort"
+                            android:textAppearance="@style/TextAppearance.Bruff.StatValue" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="@string/intro_stat_effort_label"
+                            android:textAppearance="@style/TextAppearance.Bruff.Label" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:text="Tour Highlights"
-                android:textColor="@android:color/black"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/space_lg"
+                android:layout_marginBottom="@dimen/space_sm"
+                android:text="@string/intro_highlights_title"
+                android:textAppearance="@style/TextAppearance.Bruff.Headline" />
 
             <LinearLayout
                 android:id="@+id/highlights_container"
@@ -115,16 +133,11 @@
     </ScrollView>
 
     <!-- Pinned call-to-action — always visible, never scrolls off screen -->
-    <TextView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/start_tour_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/design_default_color_primary"
-        android:gravity="center"
-        android:padding="20dp"
-        android:text="🚀 Begin Your Bruff Heritage Adventure"
-        android:textColor="@android:color/white"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:layout_margin="@dimen/screen_margin"
+        android:text="@string/intro_cta" />
 
 </LinearLayout>

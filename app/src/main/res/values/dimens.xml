@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing scale (4dp base) -->
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_sm">8dp</dimen>
+    <dimen name="space_md">16dp</dimen>
+    <dimen name="space_lg">24dp</dimen>
+    <dimen name="space_xl">32dp</dimen>
+    <dimen name="screen_margin">20dp</dimen>
+
+    <!-- Shape -->
+    <dimen name="radius_sm">10dp</dimen>
+    <dimen name="radius_md">14dp</dimen>
+    <dimen name="radius_lg">22dp</dimen>
+
+    <!-- Components -->
+    <dimen name="button_height">52dp</dimen>
+    <dimen name="badge_size">28dp</dimen>
+    <dimen name="hero_height">220dp</dimen>
+    <dimen name="map_chip_height">40dp</dimen>
+</resources>

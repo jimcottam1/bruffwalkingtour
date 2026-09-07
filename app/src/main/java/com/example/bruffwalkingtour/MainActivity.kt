@@ -1294,13 +1294,13 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun createCurrentWaypointMarkerIcon(number: Int): Drawable? {
-        // Bright blue for current waypoint
-        return createNumberedMarkerIcon(number, Color.argb(255, 33, 150, 243))
+        // Brand gold for the stop you're heading to (also flashes — see startMarkerFlashAnimation)
+        return createNumberedMarkerIcon(number, Color.argb(255, 200, 146, 42))
     }
-    
+
     private fun createFutureWaypointMarkerIcon(number: Int): Drawable? {
-        // Green for future waypoints
-        return createNumberedMarkerIcon(number, Color.argb(255, 76, 175, 80))
+        // Faded gold for stops still ahead
+        return createNumberedMarkerIcon(number, Color.argb(255, 154, 110, 30))
     }
     
     private fun createCompletedMarkerIcon(number: Int): Drawable? {
@@ -1309,9 +1309,9 @@ class MainActivity : AppCompatActivity() {
             val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
             
-            // Draw gray circle for completed
+            // Draw green circle for a visited stop
             val paint = android.graphics.Paint().apply {
-                color = Color.argb(255, 158, 158, 158) // Gray
+                color = Color.argb(255, 74, 124, 89) // trail_visited
                 isAntiAlias = true
                 style = android.graphics.Paint.Style.FILL
             }
@@ -1559,17 +1559,18 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) {}
     }
 
+    /** Monochrome arrow glyph (inherits the nav bar's text colour — not an emoji). */
     private fun getDirectionalArrow(bearing: Float): String {
         val normalizedBearing = (bearing + 360) % 360
         return when {
-            normalizedBearing < 22.5 || normalizedBearing >= 337.5 -> "⬆️" // North
-            normalizedBearing < 67.5 -> "↗️" // Northeast  
-            normalizedBearing < 112.5 -> "➡️" // East
-            normalizedBearing < 157.5 -> "↘️" // Southeast
-            normalizedBearing < 202.5 -> "⬇️" // South
-            normalizedBearing < 247.5 -> "↙️" // Southwest
-            normalizedBearing < 292.5 -> "⬅️" // West
-            else -> "↖️" // Northwest
+            normalizedBearing < 22.5 || normalizedBearing >= 337.5 -> "↑"
+            normalizedBearing < 67.5 -> "↗"
+            normalizedBearing < 112.5 -> "→"
+            normalizedBearing < 157.5 -> "↘"
+            normalizedBearing < 202.5 -> "↓"
+            normalizedBearing < 247.5 -> "↙"
+            normalizedBearing < 292.5 -> "←"
+            else -> "↖"
         }
     }
     

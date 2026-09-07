@@ -48,7 +48,8 @@
         <activity
             android:name=".HelpActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Bruffwalkingtour.WithActionBar" />
 
         <activity
             android:name=".TourCompletionActivity"
@@ -59,13 +60,15 @@
             android:name=".AdminSettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:parentActivityName=".IntroActivity" />
+            android:parentActivityName=".IntroActivity"
+            android:theme="@style/Theme.Bruffwalkingtour.WithActionBar" />
 
         <activity
             android:name=".LogViewerActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:parentActivityName=".AdminSettingsActivity" />
+            android:parentActivityName=".AdminSettingsActivity"
+            android:theme="@style/Theme.Bruffwalkingtour.WithActionBar" />
 
     </application>
 
