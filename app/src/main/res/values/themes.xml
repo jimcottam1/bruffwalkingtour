@@ -26,6 +26,15 @@
         <item name="android:windowAnimationStyle">@style/Animation.Bruff.Activity</item>
     </style>
 
+    <!-- Launch/splash theme (androidx core-splashscreen). Ink ground + the gold
+         monument, then hands off to the app theme. Set on the launcher activity;
+         installSplashScreen() in IntroActivity.onCreate does the swap. -->
+    <style name="Theme.Bruff.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ink</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.Bruffwalkingtour</item>
+    </style>
+
     <!-- For the handful of screens (Help, waypoint detail, admin) that want a
          real top bar with an up affordance. -->
     <style name="Theme.Bruffwalkingtour.WithActionBar" parent="Theme.Bruffwalkingtour">

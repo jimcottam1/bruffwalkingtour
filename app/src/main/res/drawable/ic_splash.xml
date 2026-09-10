@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash-screen icon: the monument, sized to sit comfortably inside the
+     system splash mask. Background is painted by the splash theme. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path android:pathData="M54,30 L62,46 L46,46 Z M47,46 L61,46 L63,72 L45,72 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="45" android:startY="0"
+                android:endX="63" android:endY="0"
+                android:type="linear">
+                <item android:color="#F0C572" android:offset="0" />
+                <item android:color="#C8922A" android:offset="0.55" />
+                <item android:color="#A2701D" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="#C8922A" android:pathData="M42,72 L66,72 L66,76 L42,76 Z" />
+    <path android:fillColor="#B4801F" android:pathData="M38,76 L70,76 L70,80 L38,80 Z" />
+</vector>

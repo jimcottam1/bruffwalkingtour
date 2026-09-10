@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- In-app mark: an ink medallion with the gold monument. Reads on both the
-     parchment (light) and ink (gate) screens. -->
+<!-- In-app mark: an ink medallion with the gold monument and a thin gold ring.
+     Reads on both the parchment (light) and ink (gate) screens. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="96dp"
@@ -17,19 +17,18 @@
         android:strokeWidth="2"
         android:pathData="M48,48 m-42,0 a42,42 0 1,1 84,0 a42,42 0 1,1 -84,0" />
 
-    <path android:pathData="M48,19 L56,35 L40,35 Z">
+    <path android:pathData="M48,17 L57,34 L39,34 Z M40,34 L56,34 L58,68 L38,68 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="40" android:startY="19"
-                android:endX="56" android:endY="80"
+                android:startX="38" android:startY="0"
+                android:endX="58" android:endY="0"
                 android:type="linear">
-                <item android:color="#E8B85A" android:offset="0" />
-                <item android:color="#C8922A" android:offset="1" />
+                <item android:color="#F0C572" android:offset="0" />
+                <item android:color="#C8922A" android:offset="0.55" />
+                <item android:color="#A2701D" android:offset="1" />
             </gradient>
         </aapt:attr>
     </path>
-    <path android:fillColor="#D19E38" android:pathData="M42,35 L54,35 L56,70 L40,70 Z" />
-    <path android:fillColor="#C8922A" android:pathData="M36,70 L60,70 L60,76 L36,76 Z" />
-    <path android:fillColor="#C8922A" android:pathData="M32,76 L64,76 L64,82 L32,82 Z" />
-    <path android:fillColor="#1A1208" android:pathData="M41,43 L55,43 L55,45.5 L41,45.5 Z" />
+    <path android:fillColor="#C8922A" android:pathData="M34,68 L62,68 L62,73 L34,73 Z" />
+    <path android:fillColor="#B4801F" android:pathData="M30,73 L66,73 L66,79 L30,79 Z" />
 </vector>

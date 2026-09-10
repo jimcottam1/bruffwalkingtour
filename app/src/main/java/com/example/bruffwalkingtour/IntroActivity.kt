@@ -2,25 +2,39 @@ package com.example.bruffwalkingtour
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 class IntroActivity : AppCompatActivity() {
-    
+
+    companion object {
+        private const val SPLASH_MIN_MS = 550L
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Keep the branded splash up for a brief, deliberate beat rather than a
+        // sub-frame flash, then hand off to the intro screen.
+        val splash = installSplashScreen()
+        val shownAt = SystemClock.uptimeMillis()
+        splash.setKeepOnScreenCondition {
+            SystemClock.uptimeMillis() - shownAt < SPLASH_MIN_MS
+        }
+
         super.onCreate(savedInstanceState)
-        
+
         // Enable edge-to-edge display and hide system navigation
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setupSystemUI()
-        
+
         setContentView(R.layout.activity_intro)
-        
+
         setupViews()
     }
     

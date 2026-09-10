@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Heritage monument (obelisk) — echoes the Sean Wall Monument, the tour's
-     centre point. Gold on the ink adaptive background. -->
+<!-- Heritage monument (obelisk) — echoes the Sean Wall Monument at the centre
+     of the tour. Gold, lit from the left, on the ink adaptive background.
+     Art sits inside the adaptive-icon safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
@@ -8,22 +9,21 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <group>
-        <path android:pathData="M54,21 L62,37 L46,37 Z">
-            <aapt:attr name="android:fillColor">
-                <gradient
-                    android:startX="46" android:startY="21"
-                    android:endX="62" android:endY="87"
-                    android:type="linear">
-                    <item android:color="#E8B85A" android:offset="0" />
-                    <item android:color="#C8922A" android:offset="1" />
-                </gradient>
-            </aapt:attr>
-        </path>
-        <path android:fillColor="#D19E38" android:pathData="M48,37 L60,37 L62,75 L46,75 Z" />
-        <path android:fillColor="#C8922A" android:pathData="M42,75 L66,75 L66,81 L42,81 Z" />
-        <path android:fillColor="#C8922A" android:pathData="M38,81 L70,81 L70,87 L38,87 Z" />
-        <!-- engraved band -->
-        <path android:fillColor="#211710" android:pathData="M47,45 L61,45 L61,47.5 L47,47.5 Z" />
-    </group>
+    <!-- pyramidion + shaft: one lit-from-left gradient -->
+    <path android:pathData="M54,20 L64,39 L44,39 Z M46,39 L62,39 L65,79 L43,79 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="43" android:startY="0"
+                android:endX="66" android:endY="0"
+                android:type="linear">
+                <item android:color="#F0C572" android:offset="0" />
+                <item android:color="#C8922A" android:offset="0.55" />
+                <item android:color="#A2701D" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- stepped plinth -->
+    <path android:fillColor="#C8922A" android:pathData="M39,79 L69,79 L69,85 L39,85 Z" />
+    <path android:fillColor="#B4801F" android:pathData="M34,85 L74,85 L74,91 L34,91 Z" />
 </vector>
