@@ -7,6 +7,8 @@ data class TourWaypoint(
     val latitude: Double,
     val longitude: Double,
     val imageUrl: String? = null,
+    /** Bundled fallback photo — a drawable resource name (path/extension ignored). */
+    val localImage: String? = null,
     val audioUrl: String? = null,
     val historicalInfo: String? = null,
     val proximityRadius: Double = 20.0 // meters

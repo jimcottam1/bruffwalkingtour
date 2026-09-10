@@ -22,14 +22,15 @@
             android:paddingTop="@dimen/space_xl"
             android:paddingBottom="@dimen/space_lg">
 
-            <ImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/app_logo"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:layout_gravity="center_horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
                 android:layout_marginBottom="@dimen/space_lg"
                 android:contentDescription="@string/app_name"
-                android:src="@drawable/ic_logo" />
+                android:scaleType="centerCrop"
+                android:src="@drawable/thomas_fitzgerald_centre"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Bruff.Hero" />
 
             <TextView
                 android:layout_width="match_parent"

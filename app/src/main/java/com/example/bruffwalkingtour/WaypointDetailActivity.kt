@@ -17,6 +17,7 @@ class WaypointDetailActivity : AppCompatActivity() {
         const val EXTRA_WAYPOINT_DESCRIPTION = "waypoint_description"
         const val EXTRA_WAYPOINT_HISTORICAL_INFO = "waypoint_historical_info"
         const val EXTRA_WAYPOINT_IMAGE_URL = "waypoint_image_url"
+        const val EXTRA_WAYPOINT_LOCAL_IMAGE = "waypoint_local_image"
         const val EXTRA_IS_LAST_WAYPOINT = "is_last_waypoint"
     }
 
@@ -71,48 +72,62 @@ class WaypointDetailActivity : AppCompatActivity() {
         val name = intent.getStringExtra(EXTRA_WAYPOINT_NAME) ?: ""
         val description = intent.getStringExtra(EXTRA_WAYPOINT_DESCRIPTION) ?: ""
         val historicalInfo = intent.getStringExtra(EXTRA_WAYPOINT_HISTORICAL_INFO) ?: ""
-        val imageUrl = intent.getStringExtra(EXTRA_WAYPOINT_IMAGE_URL)
 
         findViewById<TextView>(R.id.waypoint_name).text = name
         findViewById<TextView>(R.id.waypoint_description).text = description
         findViewById<TextView>(R.id.waypoint_historical_info).text = historicalInfo
 
+        loadWaypointImage(
+            name,
+            localImage = intent.getStringExtra(EXTRA_WAYPOINT_LOCAL_IMAGE),
+            imageUrl = intent.getStringExtra(EXTRA_WAYPOINT_IMAGE_URL),
+        )
+    }
+
+    /**
+     * Bundled photo first (offline, reliable), then the remote URL, then the
+     * branded placeholder. [localImage] is treated as a drawable resource name —
+     * any folder path or extension is stripped.
+     */
+    private fun loadWaypointImage(name: String, localImage: String?, imageUrl: String?) {
         val imageView = findViewById<ImageView>(R.id.waypoint_image)
 
-        LogUtils.d("WaypointDetail", "Loading image for waypoint: $name, URL: $imageUrl")
+        val localResId = localImage
+            ?.substringAfterLast('/')
+            ?.substringBeforeLast('.')
+            ?.takeIf { it.isNotBlank() }
+            ?.let { resources.getIdentifier(it, "drawable", packageName) }
+            ?: 0
+        if (localResId != 0) {
+            imageView.setImageResource(localResId)
+            return
+        }
 
-        if (!imageUrl.isNullOrEmpty()) {
-            if (imageUrl.startsWith("android.resource://")) {
-                try {
-                    val resourceName = imageUrl.substringAfterLast("/")
-                    val resourceId = resources.getIdentifier(resourceName, "drawable", packageName)
-                    if (resourceId != 0) {
-                        imageView.setImageResource(resourceId)
-                    } else {
-                        LogUtils.e("WaypointDetail", "Resource not found: $resourceName")
-                        imageView.setImageResource(R.drawable.img_waypoint_placeholder)
-                    }
-                } catch (e: Exception) {
-                    LogUtils.e("WaypointDetail", "Error loading local resource for: $name", e)
+        if (imageUrl.isNullOrEmpty()) {
+            imageView.setImageResource(R.drawable.img_waypoint_placeholder)
+            return
+        }
+
+        if (imageUrl.startsWith("android.resource://")) {
+            val resName = imageUrl.substringAfterLast('/')
+            val resId = resources.getIdentifier(resName, "drawable", packageName)
+            imageView.setImageResource(
+                if (resId != 0) resId else R.drawable.img_waypoint_placeholder,
+            )
+            return
+        }
+
+        Picasso.get()
+            .load(imageUrl)
+            .placeholder(R.drawable.img_waypoint_placeholder)
+            .error(R.drawable.img_waypoint_placeholder)
+            .into(imageView, object : Callback {
+                override fun onSuccess() {}
+                override fun onError(e: Exception?) {
+                    LogUtils.e("WaypointDetail", "Failed to load image for: $name")
                     imageView.setImageResource(R.drawable.img_waypoint_placeholder)
                 }
-            } else {
-                Picasso.get()
-                    .load(imageUrl)
-                    .placeholder(R.drawable.img_waypoint_placeholder)
-                    .error(R.drawable.img_waypoint_placeholder)
-                    .into(imageView, object : Callback {
-                        override fun onSuccess() {}
-
-                        override fun onError(e: Exception?) {
-                            LogUtils.e("WaypointDetail", "Failed to load image for: $name")
-                            imageView.setImageResource(R.drawable.img_waypoint_placeholder)
-                        }
-                    })
-            }
-        } else {
-            imageView.setImageResource(R.drawable.img_waypoint_placeholder)
-        }
+            })
     }
 
     override fun onSupportNavigateUp(): Boolean {

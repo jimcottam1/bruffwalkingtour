@@ -922,6 +922,7 @@ class MainActivity : AppCompatActivity() {
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_DESCRIPTION, waypoint.description)
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_HISTORICAL_INFO, waypoint.historicalInfo)
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_IMAGE_URL, waypoint.imageUrl)
+            putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_LOCAL_IMAGE, waypoint.localImage)
             putExtra(WaypointDetailActivity.EXTRA_IS_LAST_WAYPOINT, locationService.isTourCompleted())
         }
         waypointDetailsLauncher.launch(intent)

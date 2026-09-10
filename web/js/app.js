@@ -340,15 +340,18 @@ export function initDetailPage() {
   histEl.textContent = waypoint.historicalInfo;
   document.title = `${waypoint.name} — Bruff Heritage Trail`;
 
-  // Image with fallback chain: remote URL → local file → placeholder
+  // Bundled photo first (offline, reliable) → remote URL → placeholder
   imgEl.alt = waypoint.name;
-  imgEl.src = waypoint.imageUrl || waypoint.localImage || 'assets/images/placeholder.jpg';
+  const imageChain = [
+    waypoint.localImage,
+    waypoint.imageUrl,
+    'assets/images/placeholder.jpg',
+  ].filter(Boolean);
+  let imageChainIdx = 0;
+  imgEl.src = imageChain[0];
   imgEl.onerror = () => {
-    if (waypoint.localImage && imgEl.src !== new URL(waypoint.localImage, location.href).href) {
-      imgEl.src = waypoint.localImage;
-    } else {
-      imgEl.src = 'assets/images/placeholder.jpg';
-    }
+    imageChainIdx += 1;
+    if (imageChainIdx < imageChain.length) imgEl.src = imageChain[imageChainIdx];
   };
 
   const isLast = tour.getCurrentIndex() === WAYPOINTS.length - 1;

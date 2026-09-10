@@ -32,6 +32,10 @@ function kotlinString(value) {
   return `"${escaped}"`;
 }
 
+function kotlinNullableString(value) {
+  return value == null ? 'null' : kotlinString(value);
+}
+
 function jsString(value) {
   const trimmed = String(value).replace(/\n+$/, '');
   return JSON.stringify(trimmed);
@@ -54,7 +58,8 @@ function generateKotlin(data) {
                     longitude = ${kotlinDouble(wp.longitude)},
                     historicalInfo = ${kotlinString(wp.historicalInfo)},
                     proximityRadius = ${kotlinDouble(wp.proximityRadius)},
-                    imageUrl = ${kotlinString(wp.imageUrl)}
+                    imageUrl = ${kotlinString(wp.imageUrl)},
+                    localImage = ${kotlinNullableString(wp.localImage)}
                 )`
     )
     .join(',\n');
