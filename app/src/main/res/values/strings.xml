@@ -31,6 +31,7 @@
     <string name="arrival_card_title_default">You\'ve arrived</string>
     <string name="arrival_card_title">You\'ve arrived at %s</string>
     <string name="arrival_card_hint">Read the story of this stop, then carry on with the walk.</string>
+    <string name="arrival_card_hint_first">Tap Explore this stop to read its story, or Play the story to listen. Not now keeps you walking.</string>
     <string name="arrival_card_explore">Explore this stop</string>
     <string name="arrival_card_dismiss">Not now</string>
     <string name="arrival_channel_name">Stop arrivals</string>
@@ -50,7 +51,11 @@
 
     <!-- Live navigation -->
     <string name="nav_locating">Finding your position…</string>
+    <string name="nav_arrived_at">You\'ve arrived at %s</string>
+    <string name="nav_tap_to_explore">Tap to explore this stop</string>
+    <string name="nav_next_stop">Next stop</string>
     <string name="map_progress">Stop %1$d of %2$d</string>
+    <string name="moved_on_chip">You\'ve passed %s</string>
     <string name="tour_complete">Walk complete</string>
     <string name="well_done">You\'ve visited every stop.</string>
     <string name="tour_complete_celebration">Walk complete</string>
@@ -76,6 +81,7 @@
     <string name="detail_history_title">History</string>
     <string name="detail_continue">Continue</string>
     <string name="detail_finish">Finish the walk</string>
+    <string name="detail_done">Done</string>
 
     <!-- Audio guide (Phase 1: device text-to-speech reads the history) -->
     <string name="narration_listen">Listen</string>
@@ -85,6 +91,7 @@
     <!-- Completion screen -->
     <string name="complete_title">You\'ve walked the trail</string>
     <string name="complete_subtitle">Four historic sites of Bruff, on foot. We hope you enjoyed the walk.</string>
+    <string name="complete_stamp">Trail complete</string>
     <string name="complete_summary_title">Where you\'ve been</string>
     <string name="complete_stat_stops">%d stops</string>
     <string name="complete_stat_time">90 min</string>

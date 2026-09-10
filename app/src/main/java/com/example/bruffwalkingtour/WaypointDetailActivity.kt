@@ -19,6 +19,8 @@ class WaypointDetailActivity : AppCompatActivity() {
         const val EXTRA_WAYPOINT_IMAGE_URL = "waypoint_image_url"
         const val EXTRA_WAYPOINT_LOCAL_IMAGE = "waypoint_local_image"
         const val EXTRA_IS_LAST_WAYPOINT = "is_last_waypoint"
+        /** Opened just to read (a visited/upcoming stop) — no "Continue". */
+        const val EXTRA_BROWSE_ONLY = "browse_only"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,16 +36,21 @@ class WaypointDetailActivity : AppCompatActivity() {
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        val browseOnly = intent.getBooleanExtra(EXTRA_BROWSE_ONLY, false)
         val isLastWaypoint = intent.getBooleanExtra(EXTRA_IS_LAST_WAYPOINT, false)
         val continueButton = findViewById<MaterialButton>(R.id.continue_tour_text)
         continueButton.setText(
-            if (isLastWaypoint) R.string.detail_finish else R.string.detail_continue,
+            when {
+                browseOnly -> R.string.detail_done
+                isLastWaypoint -> R.string.detail_finish
+                else -> R.string.detail_continue
+            },
         )
         continueButton.setOnClickListener {
-            // MainActivity advances the tour on RESULT_OK and decides — from its
-            // own waypoint index — whether that was the final stop.
             NarrationPlayer.stop()
-            setResult(RESULT_OK)
+            // Browse-only: just close, don't advance the tour. Otherwise
+            // MainActivity advances on RESULT_OK.
+            if (!browseOnly) setResult(RESULT_OK)
             finish()
         }
     }

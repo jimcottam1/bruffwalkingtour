@@ -3,15 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_md"
+    android:background="?attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:paddingVertical="@dimen/space_sm">
 
     <TextView
         android:id="@+id/completed_check"
         style="@style/Widget.Bruff.Badge"
-        android:background="@drawable/bg_badge_visited"
         android:layout_marginEnd="@dimen/space_md"
+        android:background="@drawable/bg_badge_visited"
         android:text="✓"
         tools:ignore="HardcodedText" />
 
@@ -22,5 +23,14 @@
         android:layout_weight="1"
         android:textAppearance="@style/TextAppearance.Bruff.Body"
         tools:text="Thomas Fitzgerald Centre" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/space_sm"
+        android:text="›"
+        android:textColor="@color/on_light_muted"
+        android:textSize="22sp"
+        tools:ignore="HardcodedText" />
 
 </LinearLayout>

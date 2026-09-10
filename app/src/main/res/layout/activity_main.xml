@@ -57,31 +57,92 @@
         android:paddingTop="@dimen/space_md"
         android:paddingBottom="@dimen/space_lg">
 
-        <TextView
-            android:id="@+id/navigation_instruction"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/nav_locating"
-            android:textAppearance="@style/TextAppearance.Bruff.NavPrimary"
-            tools:text="Head north to Sean Wall Monument" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/distance_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
-            android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
-            tools:text="220 m · 3 min" />
+            <ImageView
+                android:id="@+id/nav_arrow"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:contentDescription="@string/nav_next_stop"
+                android:src="@drawable/ic_nav_dot" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_md"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/navigation_instruction"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="@string/nav_locating"
+                    android:textAppearance="@style/TextAppearance.Bruff.NavPrimary"
+                    android:textSize="20sp"
+                    tools:text="Sean Wall Monument" />
+
+                <TextView
+                    android:id="@+id/distance_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
+                    tools:text="120 m  ·  2 min" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/gps_accuracy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:alpha="0.7"
+            android:layout_marginTop="@dimen/space_xs"
+            android:alpha="0.6"
             android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
             android:textSize="11sp"
             tools:text="GPS ±8 m" />
+
+    </LinearLayout>
+
+    <!-- "You've walked past a stop without continuing" — a quiet inline nudge,
+         not a modal. Shares the slot above the nav bar with the arrival card. -->
+    <LinearLayout
+        android:id="@+id/moved_on_chip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottom_info_bar"
+        android:layout_margin="@dimen/space_md"
+        android:background="@drawable/bg_map_pill"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_md"
+        android:paddingEnd="@dimen/space_xs"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/moved_on_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingVertical="@dimen/space_sm"
+            android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
+            android:textColor="@color/on_dark"
+            tools:text="You've passed Sean Wall Monument" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/moved_on_advance"
+            style="@style/Widget.Bruff.Button.TextOnDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/moved_on_advance" />
 
     </LinearLayout>
 
@@ -110,6 +171,7 @@
                 android:textAppearance="@style/TextAppearance.Bruff.Title" />
 
             <TextView
+                android:id="@+id/arrival_card_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
@@ -191,20 +253,11 @@
             android:textSize="15sp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/start_tour_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_lg"
-            android:minWidth="220dp"
-            android:text="@string/start_tour_button"
-            android:visibility="gone" />
-
-        <com.google.android.material.button.MaterialButton
             android:id="@+id/gate_override_button"
             style="@style/Widget.Bruff.Button.TextOnDark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
+            android:layout_marginTop="@dimen/space_lg"
             android:text="@string/gate_start_anyway"
             android:visibility="gone" />
 

@@ -56,7 +56,22 @@ class TourCompletionActivity : AppCompatActivity() {
         waypoints.forEach { waypoint ->
             val item = inflater.inflate(R.layout.list_item_completed, container, false)
             item.findViewById<TextView>(R.id.completed_name).text = waypoint.name
+            item.setOnClickListener { openStop(waypoint) }
             container.addView(item)
         }
+    }
+
+    /** Re-read a stop's story from the summary. */
+    private fun openStop(waypoint: TourWaypoint) {
+        startActivity(
+            Intent(this, WaypointDetailActivity::class.java).apply {
+                putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_NAME, waypoint.name)
+                putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_DESCRIPTION, waypoint.description)
+                putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_HISTORICAL_INFO, waypoint.historicalInfo)
+                putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_IMAGE_URL, waypoint.imageUrl)
+                putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_LOCAL_IMAGE, waypoint.localImage)
+                putExtra(WaypointDetailActivity.EXTRA_BROWSE_ONLY, true)
+            },
+        )
     }
 }

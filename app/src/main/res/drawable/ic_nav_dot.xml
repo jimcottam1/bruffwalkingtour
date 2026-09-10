@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown in the nav bar when the user is at a stop / the walk is done. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#F5F0E8"
+        android:pathData="M24,24 m-9,0 a9,9 0 1,1 18,0 a9,9 0 1,1 -18,0" />
+    <path android:fillColor="#00000000" android:strokeColor="#F5F0E8" android:strokeWidth="2.5"
+        android:pathData="M24,24 m-15,0 a15,15 0 1,1 30,0 a15,15 0 1,1 -30,0" />
+</vector>

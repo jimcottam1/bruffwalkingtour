@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Points "up"; rotated at runtime to the bearing of the next stop. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#F5F0E8"
+        android:pathData="M24,5 L40,40 L24,31 L8,40 Z" />
+</vector>

@@ -7,10 +7,6 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.Spanned
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -43,11 +39,7 @@ import org.osmdroid.events.ZoomEvent
 import org.osmdroid.views.overlay.Overlay
 import android.graphics.Point
 import android.view.MotionEvent
-import android.view.LayoutInflater
 import android.widget.ImageView
-import android.widget.FrameLayout
-import com.squareup.picasso.Picasso
-import android.view.Gravity
 
 class MainActivity : AppCompatActivity() {
     
@@ -64,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         // delay, and never without offering a "start here anyway" escape.
         private const val GATE_OUTSIDE_RETURN_DELAY_MS = 12000L
         private const val GATE_OUTSIDE_FIXES_BEFORE_RETURN = 3
+        // With no GPS fix at all, show a manual "start here anyway" after this.
+        private const val GATE_FALLBACK_MS = 12000L
 
         // Heads-up notification shown the moment the user reaches a stop, so the
         // arrival isn't missed while the phone is pocketed or pointed at the site.
@@ -116,12 +110,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var boundaryGateOverlay: View
     private lateinit var gateStatusText: TextView
     private lateinit var gateDistanceText: TextView
-    private lateinit var startTourButton: Button
     private lateinit var gateOverrideButton: Button
     private lateinit var recenterButton: Button
+    private lateinit var navArrow: ImageView
+    private lateinit var bottomInfoBar: View
     private lateinit var arrivalCard: View
     private lateinit var arrivalCardTitle: TextView
+    private lateinit var arrivalCardHint: TextView
     private lateinit var arrivalCardListen: com.google.android.material.button.MaterialButton
+    private lateinit var movedOnChip: View
+    private lateinit var movedOnText: TextView
     private lateinit var progressChip: TextView
     // True while the map auto-centres on GPS fixes. Suspended as soon as the
     // user touches the map (drag/pinch), so their gesture isn't fought by the
@@ -148,7 +146,6 @@ class MainActivity : AppCompatActivity() {
     private var currentLocation: Location? = null
     private var nearbyWaypoint: TourWaypoint? = null
     private val markerBitmaps = mutableListOf<Bitmap>()
-    private var imagePreviewOverlay: android.view.View? = null
     private val markerAnimators = mutableMapOf<Marker, android.animation.ValueAnimator>()
     
     private val locationPermissionRequest = registerForActivityResult(
@@ -181,6 +178,7 @@ class MainActivity : AppCompatActivity() {
         val wasLastWaypoint = locationService.isTourCompleted()
         locationService.moveToNextWaypoint()
         hideArrivalCard()
+        hideMovedOnChip()
         if (!wasLastWaypoint) {
             currentLocation?.let { location -> updateNavigationInstructions(location) }
             updateAllWaypointMarkers()
@@ -251,14 +249,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
         requestLocationPermissions()
+
+        // If no GPS fix ever arrives (indoors, airplane mode) the gate would sit
+        // on "finding your location" forever — offer a manual way in after a bit.
+        lifecycleScope.launch {
+            delay(GATE_FALLBACK_MS)
+            if (!tourStarted) gateOverrideButton.visibility = View.VISIBLE
+        }
+
         LogUtils.d("MainActivity", "onCreate completed")
     }
 
     /**
      * A previous tour is saved but hasn't been touched for a while — ask the
-     * user whether to carry on from where they were or start the tour over,
-     * rather than silently resuming (which is surprising on a deliberate
-     * relaunch). Shown over the still-visible boundary gate.
+     * user whether to carry on from where they were or start over, rather than
+     * silently resuming (surprising on a deliberate relaunch). Shown over the
+     * "finding your location" gate.
      */
     private fun promptResumeOrRestart() {
         val savedIndex = locationService.savedWaypointIndex()
@@ -268,9 +274,10 @@ class MainActivity : AppCompatActivity() {
             .setMessage(getString(R.string.resume_message, savedIndex + 1, total))
             .setPositiveButton(getString(R.string.resume_continue)) { _, _ -> startTour() }
             .setNegativeButton(getString(R.string.resume_start_over)) { _, _ ->
-                // Fall through to the normal gate — it's already on screen and
-                // driven by location updates.
                 locationService.clearSavedProgress()
+                // Let the gate take over — it auto-starts once a fix confirms
+                // we're inside the area (or immediately if there's no fix yet).
+                updateGateState(locationService.outsideTourArea.value)
             }
             .setCancelable(false)
             .show()
@@ -379,27 +386,40 @@ class MainActivity : AppCompatActivity() {
         boundaryGateOverlay = findViewById(R.id.boundary_gate_overlay)
         gateStatusText = findViewById(R.id.gate_status_text)
         gateDistanceText = findViewById(R.id.gate_distance_text)
-        startTourButton = findViewById(R.id.start_tour_button)
         gateOverrideButton = findViewById(R.id.gate_override_button)
         recenterButton = findViewById(R.id.recenter_button)
+        navArrow = findViewById(R.id.nav_arrow)
+        bottomInfoBar = findViewById(R.id.bottom_info_bar)
         arrivalCard = findViewById(R.id.arrival_card)
         arrivalCardTitle = findViewById(R.id.arrival_card_title)
+        arrivalCardHint = findViewById(R.id.arrival_card_hint)
         arrivalCardListen = findViewById(R.id.arrival_card_listen)
+        movedOnChip = findViewById(R.id.moved_on_chip)
+        movedOnText = findViewById(R.id.moved_on_text)
         progressChip = findViewById(R.id.progress_chip)
 
-        // Enable clickable links in navigation text
-        navigationInstructionText.movementMethod = LinkMovementMethod.getInstance()
-
-        startTourButton.setOnClickListener { startTour() }
         gateOverrideButton.setOnClickListener { startTour() }
+        // The whole nav bar opens the current (or just-arrived) stop's detail.
+        bottomInfoBar.setOnClickListener {
+            val wp = nearbyWaypoint ?: locationService.getCurrentWaypoint() ?: return@setOnClickListener
+            showWaypointDetails(wp, arrivalContext = nearbyWaypoint != null)
+        }
         findViewById<Button>(R.id.help_button).setOnClickListener {
             startActivity(Intent(this, HelpActivity::class.java))
         }
         findViewById<Button>(R.id.arrival_card_button).setOnClickListener {
-            nearbyWaypoint?.let { showWaypointDetails(it) }
+            nearbyWaypoint?.let { showWaypointDetails(it, arrivalContext = true) }
         }
         findViewById<Button>(R.id.arrival_card_dismiss).setOnClickListener {
             hideArrivalCard()
+        }
+        findViewById<Button>(R.id.moved_on_advance).setOnClickListener {
+            movedOnPromptHandledForIndex = locationService.getCurrentWaypointIndex()
+            locationService.moveToNextWaypoint()
+            hideMovedOnChip()
+            hideArrivalCard()
+            updateAllWaypointMarkers()
+            currentLocation?.let { updateNavigationInstructions(it) }
         }
         arrivalCardListen.setOnClickListener {
             val wp = nearbyWaypoint ?: return@setOnClickListener
@@ -520,6 +540,7 @@ class MainActivity : AppCompatActivity() {
                 // haptic buzz, a heads-up notification, and a persistent on-screen
                 // card with an Explore button (not just a 3-second toast).
                 vibrate()
+                hideMovedOnChip()
                 showArrivalCard(waypoint)
                 postArrivalNotification(waypoint)
             } else {
@@ -550,26 +571,19 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * The user reached a stop earlier but walked on without tapping Continue and
-     * is now closer to the next stop — offer to advance so navigation stops
-     * pointing back at a stop they've already seen. Shown once per stop.
+     * is now closer to the next stop — show a quiet inline "Advance" chip (not a
+     * modal) so navigation stops pointing back at a stop they've already seen.
      */
     private fun maybePromptToAdvance(fromWaypoint: TourWaypoint?) {
         if (fromWaypoint == null || !tourStarted) return
-        val fromIndex = locationService.getCurrentWaypointIndex()
-        if (movedOnPromptHandledForIndex == fromIndex) return
-        movedOnPromptHandledForIndex = fromIndex
-        val next = locationService.getNextWaypoint() ?: return
+        if (locationService.getNextWaypoint() == null) return
+        if (movedOnPromptHandledForIndex == locationService.getCurrentWaypointIndex()) return
+        movedOnText.text = getString(R.string.moved_on_chip, fromWaypoint.name)
+        movedOnChip.visibility = View.VISIBLE
+    }
 
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setMessage(getString(R.string.moved_on_prompt, fromWaypoint.name, next.name))
-            .setPositiveButton(getString(R.string.moved_on_advance)) { _, _ ->
-                locationService.moveToNextWaypoint()
-                hideArrivalCard()
-                currentLocation?.let { location -> updateNavigationInstructions(location) }
-                updateAllWaypointMarkers()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+    private fun hideMovedOnChip() {
+        if (::movedOnChip.isInitialized) movedOnChip.visibility = View.GONE
     }
     
     private fun loadTour() {
@@ -862,24 +876,23 @@ class MainActivity : AppCompatActivity() {
     }
     
     /**
-     * Drives the boundary gate overlay: shown until the user confirms they're
-     * inside the tour area and taps Start. Called on every accepted GPS fix.
+     * Drives the boundary gate overlay: a brief "finding your location" screen
+     * that auto-dismisses into the live map as soon as a fix confirms the user
+     * is inside the tour area. Only lingers (with an explanation) if they're
+     * outside. Called on every accepted GPS fix.
      */
     private fun updateGateState(outsideMessage: String?) {
         if (tourStarted) return // gate already dismissed
 
         if (outsideMessage == null) {
+            // In the area — just begin, no "tap to start" step.
             consecutiveOutsideGateFixes = 0
             returnToIntroJob?.cancel()
             returnToIntroJob = null
-            gateStatusText.text = getString(R.string.gate_ready)
-            gateDistanceText.text = ""
-            startTourButton.visibility = View.VISIBLE
-            gateOverrideButton.visibility = View.GONE
+            startTour()
         } else {
             consecutiveOutsideGateFixes++
             gateStatusText.text = getString(R.string.outside_bruff_message)
-            startTourButton.visibility = View.GONE
             // Always give the user a way through — GPS may just be wrong.
             gateOverrideButton.visibility = View.VISIBLE
             currentLocation?.let { location ->
@@ -913,10 +926,15 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
     
-    private fun showWaypointDetails(waypoint: TourWaypoint) {
-        // Remember whether this was opened because the user just arrived — if so,
-        // backing out of the detail screen still counts as "done with this stop".
-        detailOpenedOnArrival = nearbyWaypoint?.id == waypoint.id
+    /**
+     * @param arrivalContext true only when opened because the user just arrived
+     *   at [waypoint] — then backing out of the detail screen still advances.
+     *   Tapping a marker for a stop that isn't the current target opens it
+     *   read-only (no Continue).
+     */
+    private fun showWaypointDetails(waypoint: TourWaypoint, arrivalContext: Boolean = false) {
+        detailOpenedOnArrival = arrivalContext && nearbyWaypoint?.id == waypoint.id
+        val browseOnly = waypoint.id != locationService.getCurrentWaypoint()?.id
         val intent = Intent(this, WaypointDetailActivity::class.java).apply {
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_NAME, waypoint.name)
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_DESCRIPTION, waypoint.description)
@@ -924,6 +942,7 @@ class MainActivity : AppCompatActivity() {
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_IMAGE_URL, waypoint.imageUrl)
             putExtra(WaypointDetailActivity.EXTRA_WAYPOINT_LOCAL_IMAGE, waypoint.localImage)
             putExtra(WaypointDetailActivity.EXTRA_IS_LAST_WAYPOINT, locationService.isTourCompleted())
+            putExtra(WaypointDetailActivity.EXTRA_BROWSE_ONLY, browseOnly)
         }
         waypointDetailsLauncher.launch(intent)
     }
@@ -967,6 +986,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun showArrivalCard(waypoint: TourWaypoint) {
         arrivalCardTitle.text = getString(R.string.arrival_card_title, waypoint.name)
+        // First arrival gets the fuller "here's how this works" hint.
+        val prefs = getSharedPreferences("bruff_tour_prefs", MODE_PRIVATE)
+        if (!prefs.getBoolean("seen_arrival_card", false)) {
+            arrivalCardHint.setText(R.string.arrival_card_hint_first)
+            prefs.edit().putBoolean("seen_arrival_card", true).apply()
+        } else {
+            arrivalCardHint.setText(R.string.arrival_card_hint)
+        }
         refreshArrivalListenVisibility()
         arrivalCard.visibility = View.VISIBLE
     }
@@ -1064,42 +1091,34 @@ class MainActivity : AppCompatActivity() {
 
         val currentWaypoint = locationService.getCurrentWaypoint()
 
-        // Check if user is currently near a waypoint (has arrived)
-        nearbyWaypoint?.let { arrivedWaypoint ->
-            setNavigationTextWithClickableLink("Arrived at ${arrivedWaypoint.name}", arrivedWaypoint.name, arrivedWaypoint)
-            distanceInfoText.text = "Tap location name above to view details"
+        // At a stop
+        nearbyWaypoint?.let { arrived ->
+            navArrow.setImageResource(R.drawable.ic_nav_dot)
+            navArrow.rotation = 0f
+            navigationInstructionText.text = getString(R.string.nav_arrived_at, arrived.name)
+            distanceInfoText.text = getString(R.string.nav_tap_to_explore)
             return
         }
-        
-        // Normal navigation instructions when not at a waypoint
+
+        // Heading to the next stop
         currentWaypoint?.let { waypoint ->
             val instruction = locationService.getNavigationInstruction(location, waypoint)
-            val bearing = locationService.getBearing(location, waypoint)
-            val arrow = getDirectionalArrow(bearing)
-            setNavigationTextWithClickableLink("$arrow ${instruction.direction} to ${waypoint.name}", waypoint.name, waypoint)
-            distanceInfoText.text = "${instruction.distance} • ${instruction.estimatedTime}"
+            navArrow.setImageResource(R.drawable.ic_nav_arrow)
+            rotateNavArrowTo(locationService.getBearing(location, waypoint))
+            navigationInstructionText.text = waypoint.name
+            distanceInfoText.text = "${instruction.distance}  ·  ${instruction.estimatedTime}"
         } ?: run {
+            navArrow.setImageResource(R.drawable.ic_nav_dot)
+            navArrow.rotation = 0f
             navigationInstructionText.text = getString(R.string.tour_complete)
             distanceInfoText.text = getString(R.string.well_done)
         }
     }
-    
-    private fun setNavigationTextWithClickableLink(fullText: String, linkText: String, waypoint: TourWaypoint) {
-        val spannableString = SpannableString(fullText)
-        val startIndex = fullText.indexOf(linkText)
-        val endIndex = startIndex + linkText.length
-        
-        if (startIndex >= 0) {
-            val clickableSpan = object : ClickableSpan() {
-                override fun onClick(widget: View) {
-                    showWaypointDetails(waypoint)
-                }
-            }
-            
-            spannableString.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        
-        navigationInstructionText.text = spannableString
+
+    /** Turn the nav arrow to [bearing]°, taking the shorter way round. */
+    private fun rotateNavArrowTo(bearing: Float) {
+        val delta = ((bearing - navArrow.rotation + 540f) % 360f) - 180f
+        navArrow.animate().rotationBy(delta).setDuration(300).start()
     }
     
     override fun onResume() {
@@ -1159,177 +1178,90 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun createNumberedMarkerIcon(number: Int, backgroundColor: Int = Color.argb(255, 76, 175, 80)): Drawable? {
+    /**
+     * A teardrop map pin: coloured head with a white outline, tip at the bottom
+     * (so anchor bottom-centre). Shows [label], or a checkmark when [check].
+     */
+    private fun createPinMarkerIcon(label: String, fillColor: Int, check: Boolean = false): Drawable? {
         return try {
-            val size = 80
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val w = 88
+            val h = 116
+            val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            
-            // Draw colored circle
-            val paint = android.graphics.Paint().apply {
-                color = backgroundColor
+
+            val cx = w / 2f
+            val headR = w * 0.40f
+            val cy = headR + 6f
+            val tipY = h - 6f
+
+            val pin = android.graphics.Path().apply {
+                addCircle(cx, cy, headR, android.graphics.Path.Direction.CW)
+                val tail = android.graphics.Path().apply {
+                    moveTo(cx - headR * 0.62f, cy + headR * 0.58f)
+                    lineTo(cx, tipY)
+                    lineTo(cx + headR * 0.62f, cy + headR * 0.58f)
+                    close()
+                }
+                op(tail, android.graphics.Path.Op.UNION)
+            }
+
+            val fill = android.graphics.Paint().apply {
                 isAntiAlias = true
                 style = android.graphics.Paint.Style.FILL
+                color = fillColor
+                setShadowLayer(6f, 0f, 3f, Color.argb(80, 0, 0, 0))
             }
-            canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2, paint)
-            
-            // Draw white border
-            paint.apply {
-                color = Color.WHITE
+            canvas.drawPath(pin, fill)
+            canvas.drawPath(pin, android.graphics.Paint().apply {
+                isAntiAlias = true
                 style = android.graphics.Paint.Style.STROKE
-                strokeWidth = 4f
-            }
-            canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2, paint)
-            
-            // Draw number text
-            paint.apply {
+                strokeWidth = 5f
                 color = Color.WHITE
-                style = android.graphics.Paint.Style.FILL
-                textSize = 32f
+            })
+
+            val fg = android.graphics.Paint().apply {
+                isAntiAlias = true
+                color = Color.WHITE
                 textAlign = android.graphics.Paint.Align.CENTER
-                typeface = android.graphics.Typeface.DEFAULT_BOLD
             }
-            
-            val textBounds = android.graphics.Rect()
-            paint.getTextBounds(number.toString(), 0, number.toString().length, textBounds)
-            val textY = size / 2f + textBounds.height() / 2f
-            canvas.drawText(number.toString(), size / 2f, textY, paint)
-            
+            if (check) {
+                fg.style = android.graphics.Paint.Style.STROKE
+                fg.strokeWidth = 7f
+                fg.strokeCap = android.graphics.Paint.Cap.ROUND
+                fg.strokeJoin = android.graphics.Paint.Join.ROUND
+                canvas.drawPath(android.graphics.Path().apply {
+                    moveTo(cx - headR * 0.42f, cy)
+                    lineTo(cx - headR * 0.08f, cy + headR * 0.38f)
+                    lineTo(cx + headR * 0.48f, cy - headR * 0.34f)
+                }, fg)
+            } else {
+                fg.style = android.graphics.Paint.Style.FILL
+                fg.typeface = android.graphics.Typeface.DEFAULT_BOLD
+                fg.textSize = w * 0.42f
+                val b = android.graphics.Rect()
+                fg.getTextBounds(label, 0, label.length, b)
+                canvas.drawText(label, cx, cy + b.height() / 2f, fg)
+            }
+
             markerBitmaps.add(bitmap)
             BitmapDrawable(resources, bitmap)
         } catch (e: Exception) {
-            LogUtils.w("MainActivity", "Error creating numbered marker", e)
+            LogUtils.w("MainActivity", "Error creating pin marker", e)
             null
         }
     }
-    
-    private fun createCurrentWaypointMarkerIcon(number: Int): Drawable? {
-        // Brand gold for the stop you're heading to (also flashes — see startMarkerFlashAnimation)
-        return createNumberedMarkerIcon(number, Color.argb(255, 200, 146, 42))
-    }
 
-    private fun createFutureWaypointMarkerIcon(number: Int): Drawable? {
+    private fun createCurrentWaypointMarkerIcon(number: Int): Drawable? =
+        // Brand gold for the stop you're heading to (also flashes — see startMarkerFlashAnimation)
+        createPinMarkerIcon(number.toString(), Color.argb(255, 200, 146, 42))
+
+    private fun createFutureWaypointMarkerIcon(number: Int): Drawable? =
         // Faded gold for stops still ahead
-        return createNumberedMarkerIcon(number, Color.argb(255, 154, 110, 30))
-    }
+        createPinMarkerIcon(number.toString(), Color.argb(255, 154, 110, 30))
+
+    private fun createCompletedMarkerIcon(number: Int): Drawable? =
+        createPinMarkerIcon(number.toString(), Color.argb(255, 74, 124, 89), check = true)
     
-    private fun createCompletedMarkerIcon(number: Int): Drawable? {
-        return try {
-            val size = 80
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            
-            // Draw green circle for a visited stop
-            val paint = android.graphics.Paint().apply {
-                color = Color.argb(255, 74, 124, 89) // trail_visited
-                isAntiAlias = true
-                style = android.graphics.Paint.Style.FILL
-            }
-            canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2, paint)
-            
-            // Draw white border
-            paint.apply {
-                color = Color.WHITE
-                style = android.graphics.Paint.Style.STROKE
-                strokeWidth = 4f
-            }
-            canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2, paint)
-            
-            // Draw checkmark instead of number
-            paint.apply {
-                color = Color.WHITE
-                style = android.graphics.Paint.Style.STROKE
-                strokeWidth = 6f
-                strokeCap = android.graphics.Paint.Cap.ROUND
-                strokeJoin = android.graphics.Paint.Join.ROUND
-            }
-            
-            // Draw checkmark path
-            val checkPath = android.graphics.Path()
-            checkPath.moveTo(size * 0.3f, size * 0.5f)
-            checkPath.lineTo(size * 0.45f, size * 0.65f)
-            checkPath.lineTo(size * 0.7f, size * 0.35f)
-            canvas.drawPath(checkPath, paint)
-            
-            markerBitmaps.add(bitmap)
-            BitmapDrawable(resources, bitmap)
-        } catch (e: Exception) {
-            LogUtils.w("MainActivity", "Error creating completed marker", e)
-            createNumberedMarkerIcon(number, Color.argb(255, 158, 158, 158)) // Fallback
-        }
-    }
-    
-    
-    private fun showImagePreview(waypoint: TourWaypoint) {
-        // Remove any existing preview
-        hideImagePreview()
-        
-        // Inflate the preview layout
-        val layoutInflater = LayoutInflater.from(this)
-        val previewView = layoutInflater.inflate(R.layout.image_preview_overlay, null)
-        
-        // Set up the preview content
-        val previewImage = previewView.findViewById<ImageView>(R.id.preview_image)
-        val previewTitle = previewView.findViewById<TextView>(R.id.preview_title)
-        val previewDescription = previewView.findViewById<TextView>(R.id.preview_description)
-        val closeButton = previewView.findViewById<Button>(R.id.preview_close_button)
-        
-        // Set title and description
-        previewTitle.text = waypoint.name
-        previewDescription.text = waypoint.description
-        
-        // Load image
-        waypoint.imageUrl?.let { imageUrl ->
-            Picasso.get()
-                .load(imageUrl)
-                .placeholder(R.drawable.ic_launcher_foreground)
-                .error(R.drawable.ic_launcher_foreground)
-                .into(previewImage)
-        } ?: run {
-            previewImage.setImageResource(R.drawable.ic_launcher_foreground)
-        }
-        
-        // Set up close button
-        closeButton.setOnClickListener {
-            hideImagePreview()
-        }
-        
-        // Add to main layout with click outside to close
-        val mainLayout = findViewById<FrameLayout>(android.R.id.content)
-        
-        // Create container that fills the screen to catch outside clicks
-        val containerView = FrameLayout(this)
-        containerView.layoutParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT
-        )
-        containerView.setOnClickListener {
-            hideImagePreview()
-        }
-        
-        // Set preview layout params
-        val layoutParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        )
-        layoutParams.gravity = Gravity.CENTER
-        previewView.layoutParams = layoutParams
-        
-        containerView.addView(previewView)
-        mainLayout.addView(containerView)
-        
-        imagePreviewOverlay = containerView
-        
-        LogUtils.d("BruffTour", "Image preview shown for: ${waypoint.name}")
-    }
-    
-    private fun hideImagePreview() {
-        imagePreviewOverlay?.let { overlay ->
-            val mainLayout = findViewById<FrameLayout>(android.R.id.content)
-            mainLayout.removeView(overlay)
-            imagePreviewOverlay = null
-        }
-    }
     
     private fun startMarkerFlashAnimation(marker: Marker) {
         // Stop any existing animation for this marker
@@ -1428,10 +1360,8 @@ class MainActivity : AppCompatActivity() {
                                 // If tap is close to a marker
                                 if (distance < 80) {
                                     LogUtils.d("BruffTour", "Marker tapped: ${waypoint.name}")
-                                    showImagePreview(waypoint)
-                                    
                                     vibrate()
-                                    
+                                    showWaypointDetails(waypoint)
                                     return true // Only consume when we actually handle a marker tap
                                 }
                             }
@@ -1469,19 +1399,4 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) {}
     }
 
-    /** Monochrome arrow glyph (inherits the nav bar's text colour — not an emoji). */
-    private fun getDirectionalArrow(bearing: Float): String {
-        val normalizedBearing = (bearing + 360) % 360
-        return when {
-            normalizedBearing < 22.5 || normalizedBearing >= 337.5 -> "↑"
-            normalizedBearing < 67.5 -> "↗"
-            normalizedBearing < 112.5 -> "→"
-            normalizedBearing < 157.5 -> "↘"
-            normalizedBearing < 202.5 -> "↓"
-            normalizedBearing < 247.5 -> "↙"
-            normalizedBearing < 292.5 -> "←"
-            else -> "↖"
-        }
-    }
-    
 }
