@@ -15,8 +15,6 @@ import { BOUNDARY } from './data.js';
 let _map = null;
 let _userMarker = null;
 let _userMarkerHalo = null;
-let _routePolyline = null;
-let _routeHalo = null;
 const _waypointMarkers = [];
 
 let _followMode = true;
@@ -68,8 +66,6 @@ export function destroyMap() {
     _map = null;
     _userMarker = null;
     _userMarkerHalo = null;
-    _routePolyline = null;
-    _routeHalo = null;
     _waypointMarkers.length = 0;
     _followMode = true;
     _onFollowChange = null;
@@ -154,43 +150,6 @@ export function updateUserLocation(lat, lon) {
       weight: 3,
       opacity: 1,
       fillOpacity: 0.95,
-    }).addTo(_map);
-  }
-}
-
-/**
- * Draw the walking route polyline, replacing any previous one.
- * @param {Array<[number, number]>} latLonArray - array of [lat, lon] pairs
- */
-export function drawRoute(latLonArray) {
-  if (!_map) return;
-  if (_routePolyline) {
-    _routePolyline.remove();
-    _routePolyline = null;
-  }
-  if (_routeHalo) {
-    _routeHalo.remove();
-    _routeHalo = null;
-  }
-  if (latLonArray?.length > 1) {
-    // Dark halo underneath so the route reads clearly over any basemap
-    // colour (light roads, parks, water).
-    _routeHalo = L.polyline(latLonArray, {
-      color: '#1a1208',
-      weight: 8,
-      opacity: 0.35,
-      lineCap: 'round',
-      lineJoin: 'round',
-      interactive: false,
-    }).addTo(_map);
-    _routePolyline = L.polyline(latLonArray, {
-      color: '#e8b85a',
-      weight: 5,
-      opacity: 0.95,
-      dashArray: '10, 8',
-      lineCap: 'round',
-      lineJoin: 'round',
-      className: 'route-line-flow',
     }).addTo(_map);
   }
 }

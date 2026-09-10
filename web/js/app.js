@@ -14,12 +14,10 @@ import {
 } from './utils.js';
 import { TourController } from './tour.js';
 import { LocationService } from './location.js';
-import { getRoute } from './routing.js';
 import {
   initMap,
   addWaypointMarkers,
   updateUserLocation,
-  drawRoute,
   panTo,
   recentre,
   isFollowing,
@@ -27,9 +25,6 @@ import {
 
 // GPS fixes with accuracy worse than this are ignored (matching Android threshold)
 const ACCURACY_THRESHOLD_M = 50;
-
-// Only re-fetch the route from OSRM when the user has moved more than this
-const ROUTE_REFRESH_THRESHOLD_M = 20;
 
 // Marks that the boundary gate has already been passed once this tour, so
 // returning to tour.html between waypoints (detail.html → tour.html) doesn't
@@ -99,16 +94,8 @@ export function initTourPage() {
 
     _refreshMarkers(tour);
 
-    // Draw initial route from tour centre → first waypoint as placeholder
-    const firstWp = tour.getCurrentWaypoint();
-    if (firstWp) {
-      getRoute(
-        BOUNDARY.CENTER_LAT,
-        BOUNDARY.CENTER_LON,
-        firstWp.latitude,
-        firstWp.longitude,
-      ).then((pts) => drawRoute(pts));
-    }
+    // No route line: the four stops are numbered and metres apart in the town
+    // centre, and the nav bar gives the live bearing + distance to the next one.
 
     // Render immediately from the fix that got us here, rather than waiting
     // for the next GPS update (which could be a few seconds away).
@@ -130,10 +117,7 @@ export function initTourPage() {
 
   const locationSvc = new LocationService();
 
-  let lastRouteLat = null;
-  let lastRouteLon = null;
   let locationStartTime = Date.now();
-  let firstGoodFix = false;
   let lastFix = null;
 
   function renderLiveUpdate(lat, lon) {
@@ -159,17 +143,6 @@ export function initTourPage() {
       const bearing = bearingDeg(lat, lon, wp.latitude, wp.longitude);
       navText.textContent  = `${directionFromBearing(bearing)} to ${wp.name}`;
       distText.textContent = `${formatDistance(dist)} · ~${formatEta(dist)}`;
-
-      // Refresh route only when user has moved ROUTE_REFRESH_THRESHOLD_M or more
-      const movedSinceLastRoute = lastRouteLat !== null
-        ? haversineDistance(lat, lon, lastRouteLat, lastRouteLon)
-        : Infinity;
-
-      if (movedSinceLastRoute >= ROUTE_REFRESH_THRESHOLD_M) {
-        lastRouteLat = lat;
-        lastRouteLon = lon;
-        getRoute(lat, lon, wp.latitude, wp.longitude).then((pts) => drawRoute(pts));
-      }
     }
   }
 
@@ -194,12 +167,6 @@ export function initTourPage() {
 
       // Skip inaccurate fixes until timeout
       if (!accuracyOk && !timedOut) return;
-
-      if (!firstGoodFix) {
-        firstGoodFix = true;
-        lastRouteLat = lat;
-        lastRouteLon = lon;
-      }
 
       lastFix = { lat, lon };
 

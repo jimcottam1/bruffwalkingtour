@@ -15,7 +15,6 @@ export function initMap()             { return {}; }
 export function destroyMap()          {}
 export function addWaypointMarkers()  {}
 export function updateUserLocation()  {}
-export function drawRoute()           {}
 export function panTo()               {}
 export function recentre()            {}
 export function isFollowing()         { return true; }

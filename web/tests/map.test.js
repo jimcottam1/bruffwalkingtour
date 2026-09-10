@@ -12,7 +12,6 @@ import {
   destroyMap,
   addWaypointMarkers,
   updateUserLocation,
-  drawRoute,
   panTo,
   recentre,
   isFollowing,
@@ -242,43 +241,6 @@ describe('updateUserLocation', () => {
   it('does not throw when called before initMap', () => {
     destroyMap();
     expect(() => updateUserLocation(52.477, -8.548)).not.toThrow();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// drawRoute
-// ---------------------------------------------------------------------------
-
-describe('drawRoute', () => {
-  beforeEach(() => initMap('map'));
-
-  it('creates a polyline with the given points', () => {
-    const pts = [[52.477, -8.548], [52.478, -8.549]];
-    drawRoute(pts);
-    expect(L.polyline).toHaveBeenCalledWith(pts, expect.any(Object));
-  });
-
-  it('removes the previous polyline before drawing a new one', () => {
-    const pts = [[52.477, -8.548], [52.478, -8.549]];
-    drawRoute(pts);
-    const firstPoly = L.polyline.mock.results[0].value;
-    drawRoute([[52.479, -8.550], [52.480, -8.551]]);
-    expect(firstPoly.remove).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not draw when given fewer than 2 points', () => {
-    drawRoute([[52.477, -8.548]]);
-    expect(L.polyline).not.toHaveBeenCalled();
-  });
-
-  it('does not draw when given null', () => {
-    drawRoute(null);
-    expect(L.polyline).not.toHaveBeenCalled();
-  });
-
-  it('does not throw when called before initMap', () => {
-    destroyMap();
-    expect(() => drawRoute([[52.477, -8.548], [52.478, -8.549]])).not.toThrow();
   });
 });
 

@@ -4,14 +4,12 @@
  * Strategies:
  *  - App shell (HTML/CSS/JS/images): cache-first, network fallback
  *  - Map tiles (OSM France HOT): stale-while-revalidate, capped at MAX_TILE_ENTRIES
- *  - OSRM routing API: network-only (fallback handled in routing.js)
  *
  * Bump CACHE_VERSION to force all clients to download a fresh app shell.
  */
 
-// v2: basemap moved off CARTO (keyless quota → "API key" watermark tiles) to
-// OSM France HOT. Bumping evicts any cached watermark tiles.
-const CACHE_VERSION = 'v2';
+// v3: route line + routing.js removed from the app shell.
+const CACHE_VERSION = 'v3';
 const APP_CACHE  = `bruff-app-${CACHE_VERSION}`;
 const TILE_CACHE = `bruff-tiles-${CACHE_VERSION}`;
 // Big enough to hold the whole fixed tour area (z15–18 over ~1.5×3 km, a few
@@ -33,7 +31,6 @@ const APP_SHELL = [
   './js/utils.js',
   './js/tour.js',
   './js/location.js',
-  './js/routing.js',
   './js/map.js',
   './js/app.js',
   './assets/images/thomas_fitzgerald_centre.jpg',
@@ -76,14 +73,6 @@ self.addEventListener('fetch', (event) => {
   // Map tile requests — stale-while-revalidate with size cap
   if (url.hostname.endsWith('tile.openstreetmap.fr') || url.hostname.endsWith('tile.openstreetmap.org')) {
     event.respondWith(handleTile(event.request));
-    return;
-  }
-
-  // OSRM API — always network; routing.js handles offline fallback itself
-  if (url.hostname === 'router.project-osrm.org') {
-    event.respondWith(
-      fetch(event.request).catch(() => new Response('', { status: 503 })),
-    );
     return;
   }
 

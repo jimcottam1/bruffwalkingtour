@@ -65,11 +65,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-process:2.8.2")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.squareup.picasso:picasso:2.8")
-    
-    // Networking for routing API
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     
     testImplementation(libs.junit)

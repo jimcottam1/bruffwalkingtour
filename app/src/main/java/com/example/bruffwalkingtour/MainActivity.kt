@@ -24,16 +24,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import android.graphics.drawable.Drawable
@@ -114,7 +111,6 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var mapView: MapView
     private lateinit var locationService: LocationService
-    private lateinit var routeService: RouteService
     private lateinit var navigationInstructionText: TextView
     private lateinit var distanceInfoText: TextView
     private lateinit var gpsAccuracyText: TextView
@@ -148,8 +144,6 @@ class MainActivity : AppCompatActivity() {
     private var returnToIntroJob: Job? = null
     private var currentTour: WalkingTour? = null
     private var waypointMarkers = mutableListOf<Marker>()
-    private var routePolylines = mutableListOf<Polyline>()
-    private var routeArrowMarkers = mutableListOf<Marker>()
     private var myLocationOverlay: MyLocationNewOverlay? = null
     private var tourBoundaryOverlay: Polygon? = null
     private var currentLocation: Location? = null
@@ -240,7 +234,6 @@ class MainActivity : AppCompatActivity() {
         setupViews()
         setupMap()
         setupLocationService()
-        setupRouteService()
         NarrationPlayer.init(this)
         createArrivalNotificationChannel()
         requestNotificationPermissionIfNeeded()
@@ -496,10 +489,6 @@ class MainActivity : AppCompatActivity() {
     }
     
     
-    private fun setupRouteService() {
-        routeService = RouteService(this)
-    }
-    
     private fun setupLocationService() {
         locationService = LocationService(this)
         
@@ -592,58 +581,17 @@ class MainActivity : AppCompatActivity() {
             locationService.setCurrentTour(tour)
             addWaypointMarkersToMap(tour.waypoints)
             updateAllWaypointMarkers() // also seeds the "Stop N of M" chip
-            // Draw L-shaped placeholder routes immediately, then upgrade to OSRM road routes
-            drawRouteOnMap(tour.waypoints)
-            drawRoutesAsync(tour.waypoints)
+            // No route line drawn: the four stops are numbered and metres apart
+            // in the town centre, and the bottom bar gives the live bearing +
+            // distance to the next one. A drawn line would be an OSRM *car*
+            // route (the public server has no walking profile) — misleading for
+            // a short pedestrian walk.
             currentLocation?.let { location -> updateNavigationInstructions(location) }
         } ?: run {
             LogUtils.e("MainActivity", "Failed to load default tour!")
         }
     }
 
-    private fun drawRoutesAsync(waypoints: List<TourWaypoint>) {
-        lifecycleScope.launch {
-            // Accumulates the resolved OSRM points per leg so a later leg's fetch
-            // doesn't overwrite earlier legs that already resolved with a straight-line fallback.
-            val resolvedLegs = arrayOfNulls<List<GeoPoint>>(waypoints.size - 1)
-            for (i in 0 until waypoints.size - 1) {
-                val start = GeoPoint(waypoints[i].latitude, waypoints[i].longitude)
-                val end   = GeoPoint(waypoints[i + 1].latitude, waypoints[i + 1].longitude)
-                try {
-                    resolvedLegs[i] = withContext(Dispatchers.IO) {
-                        routeService.getRoadBasedRoute(start, end)
-                    }
-                } catch (e: Exception) {
-                    LogUtils.w("MainActivity", "OSRM route fetch failed for leg $i: ${e.message}")
-                }
-
-                // Replace placeholder polylines (and their arrows) with whatever
-                // legs have resolved so far
-                routePolylines.forEach { mapView.overlays.remove(it) }
-                routePolylines.clear()
-                routeArrowMarkers.forEach { mapView.overlays.remove(it) }
-                routeArrowMarkers.clear()
-                waypoints.indices.drop(1).forEachIndexed { idx, _ ->
-                    val legPoints = resolvedLegs[idx] ?: listOf(
-                        GeoPoint(waypoints[idx].latitude,     waypoints[idx].longitude),
-                        GeoPoint(waypoints[idx + 1].latitude, waypoints[idx + 1].longitude)
-                    )
-                    val poly = Polyline().apply {
-                        setPoints(legPoints)
-                        getOutlinePaint().color = Color.argb(200, 200, 146, 42)
-                        getOutlinePaint().strokeWidth = 8.0f
-                        getOutlinePaint().strokeCap  = android.graphics.Paint.Cap.ROUND
-                        getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
-                    }
-                    mapView.overlays.add(poly)
-                    routePolylines.add(poly)
-                    addDirectionArrow(legPoints)
-                }
-                mapView.invalidate()
-            }
-        }
-    }
-    
     private fun addTourBoundaryToMap() {
         try {
             // Create a rectangle showing the tour area boundary
@@ -905,84 +853,6 @@ class MainActivity : AppCompatActivity() {
             progressChip.text = getString(R.string.map_progress, current, waypoints.size)
         }
         mapView.invalidate()
-    }
-    
-    private fun drawRouteOnMap(waypoints: List<TourWaypoint>) {
-        // Clear existing route polylines and their direction arrows
-        routePolylines.forEach { mapView.overlays.remove(it) }
-        routePolylines.clear()
-        routeArrowMarkers.forEach { mapView.overlays.remove(it) }
-        routeArrowMarkers.clear()
-
-        // Create road-following routes between consecutive waypoints
-        for (i in 0 until waypoints.size - 1) {
-            val startPoint = GeoPoint(waypoints[i].latitude, waypoints[i].longitude)
-            val endPoint = GeoPoint(waypoints[i + 1].latitude, waypoints[i + 1].longitude)
-
-            // Use enhanced road-based routing with fallback
-            val routePoints = try {
-                routeService.getRoadBasedRouteSync(startPoint, endPoint)
-            } catch (e: Exception) {
-                // Fallback to direct line if routing fails
-                listOf(startPoint, endPoint)
-            }
-
-            val polyline = Polyline().apply {
-                setPoints(routePoints)
-                // Amber — the tour's own waypoint-to-waypoint path, the single
-                // route line shown on the map.
-                getOutlinePaint().color = Color.argb(230, 200, 146, 42)
-                getOutlinePaint().strokeWidth = 8.0f
-                getOutlinePaint().strokeCap = android.graphics.Paint.Cap.ROUND
-                getOutlinePaint().strokeJoin = android.graphics.Paint.Join.ROUND
-            }
-
-            mapView.overlays.add(polyline)
-            routePolylines.add(polyline)
-
-            addDirectionArrow(routePoints)
-        }
-
-        mapView.invalidate()
-    }
-
-    /**
-     * Places a small chevron at the midpoint of a tour route segment, rotated
-     * to the bearing of travel — makes the walking direction (waypoint order)
-     * obvious at a glance, distinct from the live route-to-you line.
-     */
-    private fun addDirectionArrow(routePoints: List<GeoPoint>) {
-        if (routePoints.size < 2) return
-        val midIndex = routePoints.size / 2
-        // Bearing is taken from the leg's overall start/end points, not the
-        // points immediately either side of the midpoint — real OSRM road
-        // geometry can double back briefly at a junction, and using only
-        // adjacent points picked up that local wiggle instead of the leg's
-        // actual direction of travel (arrow pointed backwards on some legs).
-        val from = routePoints.first()
-        val to = routePoints.last()
-        val bearing = Location("").apply {
-            latitude = from.latitude
-            longitude = from.longitude
-        }.bearingTo(Location("").apply {
-            latitude = to.latitude
-            longitude = to.longitude
-        })
-
-        val arrow = Marker(mapView).apply {
-            position = routePoints[midIndex]
-            icon = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_route_arrow)
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-            // osmdroid's Marker.rotation turns out to be counter-clockwise,
-            // opposite to Location.bearingTo()'s clockwise-from-north degrees
-            // (confirmed on-device: east/west legs pointed backwards while
-            // north/south legs looked right, since south == -south mod 360).
-            rotation = -bearing
-            isFlat = true
-            setInfoWindow(null)
-        }
-        mapView.overlays.add(arrow)
-        routeArrowMarkers.add(arrow)
     }
     
     private fun updateMapCenter(location: Location) {

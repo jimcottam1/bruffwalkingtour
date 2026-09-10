@@ -117,7 +117,6 @@ no direct `startActivity` for completion elsewhere).
 |---|---|---|---|
 | Accept GPS fix below accuracy | 50 m | `ACCURACY_THRESHOLD_M` | `ACCURACY_THRESHOLD_M` |
 | …or after timeout | 15 s | `ACCURACY_TIMEOUT_MS` | inline `15_000` |
-| Re-fetch route after moving | 20 m | (route-to-you removed on Android) | `ROUTE_REFRESH_THRESHOLD_M` |
 | Walking speed for ETA | 83 m/min | `WALKING_SPEED_MPM` | `WALKING_SPEED_MPM` |
 | Gate return delay | 12 s | `GATE_OUTSIDE_RETURN_DELAY_MS` | `GATE_OUTSIDE_RETURN_DELAY_MS` (still 6 s — TODO) |
 | Arrival-exit hysteresis | 5 m | `EXIT_HYSTERESIS_M` | n/a |

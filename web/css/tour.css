@@ -179,16 +179,6 @@ html, body {
   50%        { box-shadow: 0 3px 10px rgba(0,0,0,0.6), 0 0 0 14px rgba(232,184,90,0); }
 }
 
-/* Route line — flowing dashes over a dark halo (see map.js drawRoute) */
-.route-line-flow {
-  filter: drop-shadow(0 0 3px rgba(232, 184, 90, 0.7));
-  animation: routeFlow 0.9s linear infinite;
-}
-
-@keyframes routeFlow {
-  to { stroke-dashoffset: -18; }
-}
-
 /* User location dot + pulsing halo (see map.js updateUserLocation) */
 .user-dot {
   filter: drop-shadow(0 0 4px rgba(74, 144, 217, 0.9));
