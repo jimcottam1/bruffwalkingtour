@@ -4,9 +4,9 @@
     <!-- Location permissions -->
     <string name="location_permission_required">Location is needed for the walk</string>
     <string name="location_permission_title">Location access</string>
-    <string name="location_permission_explanation">The walk uses your location to guide you between stops and to know when you\'ve arrived. Without it you\'ll only see the map.</string>
+    <string name="location_permission_explanation">The walk uses your location to guide you between stops and to know when you\'ve arrived. The walk can\'t start without it.</string>
     <string name="settings">Settings</string>
-    <string name="continue_anyway">Continue anyway</string>
+    <string name="back">Back</string>
 
     <!-- Network connectivity -->
     <string name="no_network_connection">No internet connection. Some features may be limited.</string>
@@ -20,12 +20,8 @@
     <string name="gate_locating">Finding your location…</string>
     <string name="gate_ready">You\'re in Bruff — ready to begin.</string>
     <string name="start_tour_button">Start the walk</string>
-    <string name="gate_start_anyway">Start here anyway</string>
+    <string name="gate_no_location">We can\'t find your location. Turn on Location and head to Bruff Main Street to begin.</string>
     <string name="gate_distance_away">%s from Bruff town centre</string>
-
-    <!-- Degraded mode: location permission denied -->
-    <string name="navigation_unavailable_no_location">Navigation needs location — showing the map only</string>
-    <string name="gps_permission_denied">Location off</string>
 
     <!-- Arrival cue: on-screen card + heads-up notification -->
     <string name="arrival_card_title_default">You\'ve arrived</string>

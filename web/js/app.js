@@ -203,12 +203,23 @@ export function initTourPage() {
       renderLiveUpdate(lat, lon);
     },
     (errMsg) => {
-      // Without location we can't confirm the user is in the boundary —
-      // bypass the gate directly rather than leaving them stuck on it.
-      startTour(null);
-      navText.textContent  = errMsg;
-      distText.textContent = '';
-      if (gpsBadge) gpsBadge.textContent = 'GPS: unavailable';
+      // Without location we can't confirm the user is in Bruff, so the gate
+      // stays shut — explain, then send them back to the intro screen.
+      if (tourStarted) {
+        navText.textContent  = errMsg;
+        distText.textContent = '';
+        if (gpsBadge) gpsBadge.textContent = 'GPS: unavailable';
+        return;
+      }
+      gateStatus.textContent =
+        "We can't find your location. Turn on Location and head to Bruff Main Street to begin.";
+      gateDistance.textContent = '';
+      if (startBtn) startBtn.hidden = true;
+      if (returnToIntroTimer === null) {
+        returnToIntroTimer = setTimeout(() => {
+          window.location.href = 'index.html';
+        }, GATE_OUTSIDE_RETURN_DELAY_MS);
+      }
     },
   );
 

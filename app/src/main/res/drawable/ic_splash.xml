@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Splash-screen icon: the monument, sized to sit comfortably inside the
+<!-- Splash-screen icon: the church, sized to sit comfortably inside the
      system splash mask. Background is painted by the splash theme. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
@@ -8,11 +8,12 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <path android:pathData="M54,30 L62,46 L46,46 Z M47,46 L61,46 L63,72 L45,72 Z">
+    <group android:scaleX="0.85" android:scaleY="0.85" android:pivotX="54" android:pivotY="56">
+    <path android:fillType="evenOdd" android:pathData="M54,31 L62,50 L62,62 L76,70 L76,84 L32,84 L32,70 L46,62 L46,50 Z M53,21 L55,21 L55,24 L57,24 L57,26 L55,26 L55,31 L53,31 L53,26 L51,26 L51,24 L53,24 Z M53,56 L55,56 L55,65 L53,65 Z M51,84 L51,76 Q54,72 57,76 L57,84 Z M37,74 L39.6,74 L39.6,80 L37,80 Z M68.4,74 L71,74 L71,80 L68.4,80 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="45" android:startY="0"
-                android:endX="63" android:endY="0"
+                android:startX="32" android:startY="0"
+                android:endX="76" android:endY="0"
                 android:type="linear">
                 <item android:color="#F0C572" android:offset="0" />
                 <item android:color="#C8922A" android:offset="0.55" />
@@ -20,6 +21,6 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:fillColor="#C8922A" android:pathData="M42,72 L66,72 L66,76 L42,76 Z" />
-    <path android:fillColor="#B4801F" android:pathData="M38,76 L70,76 L70,80 L38,80 Z" />
+    <path android:fillColor="#B4801F" android:pathData="M28,84 L80,84 L80,88 L28,88 Z" />
+    </group>
 </vector>

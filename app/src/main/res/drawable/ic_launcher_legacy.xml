@@ -19,11 +19,12 @@
         </aapt:attr>
     </path>
 
-    <path android:pathData="M54,14 L66,40 L42,40 Z M43,40 L65,40 L69,84 L39,84 Z">
+    <group android:scaleX="1.2" android:scaleY="1.2" android:pivotX="54" android:pivotY="56">
+    <path android:fillType="evenOdd" android:pathData="M54,31 L62,50 L62,62 L76,70 L76,84 L32,84 L32,70 L46,62 L46,50 Z M53,21 L55,21 L55,24 L57,24 L57,26 L55,26 L55,31 L53,31 L53,26 L51,26 L51,24 L53,24 Z M53,56 L55,56 L55,65 L53,65 Z M51,84 L51,76 Q54,72 57,76 L57,84 Z M37,74 L39.6,74 L39.6,80 L37,80 Z M68.4,74 L71,74 L71,80 L68.4,80 Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="39" android:startY="0"
-                android:endX="69" android:endY="0"
+                android:startX="32" android:startY="0"
+                android:endX="76" android:endY="0"
                 android:type="linear">
                 <item android:color="#F0C572" android:offset="0" />
                 <item android:color="#C8922A" android:offset="0.55" />
@@ -31,6 +32,6 @@
             </gradient>
         </aapt:attr>
     </path>
-    <path android:fillColor="#C8922A" android:pathData="M34,84 L74,84 L74,91 L34,91 Z" />
-    <path android:fillColor="#B4801F" android:pathData="M28,91 L80,91 L80,98 L28,98 Z" />
+    <path android:fillColor="#B4801F" android:pathData="M28,84 L80,84 L80,88 L28,88 Z" />
+    </group>
 </vector>

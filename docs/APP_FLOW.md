@@ -29,7 +29,7 @@ the equivalent single source for the *flow logic*.
         │    GATE     │
         └─────────────┘   N consecutive "outside" fixes → back to Intro
               ▲                (with a generous delay; never without an
-              │                 explicit "start here anyway" escape)
+              │                 override in release builds)
    app launched / resumed
    with NO active session
 
@@ -72,9 +72,11 @@ Web: TODO — not yet implemented.)
   `GATE_OUTSIDE_FIXES_BEFORE_RETURN` (3) consecutive outside fixes, start a
   `GATE_OUTSIDE_RETURN_DELAY_MS` (12 s) timer that returns to the Intro screen.
   A single inside fix cancels the timer and resets the counter.
-- Location permission denied → offer Settings or "continue anyway". "Continue
-  anyway" enters the live screen in **map-only mode**: the nav bar states that
-  navigation needs permission; no position, proximity, or ETA.
+- **No override in release builds.** No manual way past the gate. (Android debug
+  builds only: long-press the gate message to skip it when testing away from Bruff.)
+- No GPS fix (12 s Android / location error web): explain, then return to Intro
+  after the same delay.
+- Location permission denied → offer Settings or Back (to Intro).
 
 ---
 
@@ -125,7 +127,7 @@ no direct `startActivity` for completion elsewhere).
 
 ## Known remaining divergences (web still to do)
 
-1. Gate: no consecutive-fix debounce, no "start here anyway", 6 s delay.
+1. Gate: no consecutive-fix debounce, 6 s delay.
 2. No "walked on without continuing" recovery prompt.
 3. Arrival cue is a 15 s banner (no haptic/notification — browser limits).
 4. Completion is re-checked on `pageshow`; acceptable, but keep it single-path.

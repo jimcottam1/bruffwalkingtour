@@ -59,6 +59,24 @@ test.describe('tour.html — boundary gate', () => {
     await expect(page).toHaveURL(/tour\.html/);
   });
 
+  test('a location error keeps the gate shut — no map, no Start button', async ({ page }) => {
+    await page.goto('/tour.html');
+    await page.evaluate(() => window.simulateGeoError(1));
+    await expect(page.locator('#gate-status')).toContainText("can't find your location");
+    await expect(page.locator('#boundary-gate')).toBeVisible();
+    await expect(page.locator('#start-tour-btn')).toBeHidden();
+  });
+
+  test('automatically returns to index.html after a few seconds if location is unavailable', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/tour.html');
+    await page.evaluate(() => window.simulateGeoError(2));
+    await expect(page.locator('#gate-status')).toContainText("can't find your location");
+
+    await page.clock.fastForward(6000);
+    await expect(page).toHaveURL(/index\.html/);
+  });
+
   test('GPS fix inside the boundary shows the ready message and Start button', async ({ page }) => {
     await page.goto('/tour.html');
     await page.evaluate(({ lat, lon }) => window.simulatePosition(lat, lon), INSIDE_BOUNDARY);

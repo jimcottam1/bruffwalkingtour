@@ -53,11 +53,11 @@ class MainActivity : AppCompatActivity() {
         // The "outside Bruff" gate bounces the user back to the intro screen so
         // they aren't stranded on it — but only after several consecutive
         // outside fixes (GPS near the boundary edge is noisy) and a generous
-        // delay, and never without offering a "start here anyway" escape.
+        // delay.
         private const val GATE_OUTSIDE_RETURN_DELAY_MS = 12000L
         private const val GATE_OUTSIDE_FIXES_BEFORE_RETURN = 3
-        // With no GPS fix at all, show a manual "start here anyway" after this.
-        private const val GATE_FALLBACK_MS = 12000L
+        // With no GPS fix at all, give up waiting after this and explain.
+        private const val GATE_NO_FIX_MS = 12000L
 
         // Heads-up notification shown the moment the user reaches a stop, so the
         // arrival isn't missed while the phone is pocketed or pointed at the site.
@@ -110,7 +110,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var boundaryGateOverlay: View
     private lateinit var gateStatusText: TextView
     private lateinit var gateDistanceText: TextView
-    private lateinit var gateOverrideButton: Button
     private lateinit var recenterButton: Button
     private lateinit var navArrow: ImageView
     private lateinit var bottomInfoBar: View
@@ -126,9 +125,6 @@ class MainActivity : AppCompatActivity() {
     // next location update; restored by tapping recenterButton.
     private var followMode = true
     private var tourStarted = false
-    // Set when the user chose "continue anyway" past a denied location
-    // permission — the map still loads but live navigation can't work.
-    private var locationTrackingUnavailable = false
     // Consecutive gate updates reporting "outside the area", so a couple of
     // noisy edge-of-boundary fixes don't bounce the user back to the intro.
     private var consecutiveOutsideGateFixes = 0
@@ -250,11 +246,20 @@ class MainActivity : AppCompatActivity() {
         }
         requestLocationPermissions()
 
-        // If no GPS fix ever arrives (indoors, airplane mode) the gate would sit
-        // on "finding your location" forever — offer a manual way in after a bit.
+        // With no GPS fix we can't confirm the user is in Bruff, and there is no
+        // way past the gate — say so, then return to the intro rather than
+        // leaving them on "finding your location" forever.
         lifecycleScope.launch {
-            delay(GATE_FALLBACK_MS)
-            if (!tourStarted) gateOverrideButton.visibility = View.VISIBLE
+            delay(GATE_NO_FIX_MS)
+            if (!tourStarted && currentLocation == null) {
+                gateStatusText.text = getString(R.string.gate_no_location)
+                if (returnToIntroJob == null) {
+                    returnToIntroJob = launch {
+                        delay(GATE_OUTSIDE_RETURN_DELAY_MS)
+                        returnToIntro()
+                    }
+                }
+            }
         }
 
         LogUtils.d("MainActivity", "onCreate completed")
@@ -385,8 +390,10 @@ class MainActivity : AppCompatActivity() {
         gpsAccuracyText = findViewById(R.id.gps_accuracy)
         boundaryGateOverlay = findViewById(R.id.boundary_gate_overlay)
         gateStatusText = findViewById(R.id.gate_status_text)
+        // Debug builds only: long-press the gate message to skip the location
+        // check when testing away from Bruff. Release builds have no way past it.
+        if (BuildConfig.DEBUG) gateStatusText.setOnLongClickListener { startTour(); true }
         gateDistanceText = findViewById(R.id.gate_distance_text)
-        gateOverrideButton = findViewById(R.id.gate_override_button)
         recenterButton = findViewById(R.id.recenter_button)
         navArrow = findViewById(R.id.nav_arrow)
         bottomInfoBar = findViewById(R.id.bottom_info_bar)
@@ -398,7 +405,6 @@ class MainActivity : AppCompatActivity() {
         movedOnText = findViewById(R.id.moved_on_text)
         progressChip = findViewById(R.id.progress_chip)
 
-        gateOverrideButton.setOnClickListener { startTour() }
         // The whole nav bar opens the current (or just-arrived) stop's detail.
         bottomInfoBar.setOnClickListener {
             val wp = nearbyWaypoint ?: locationService.getCurrentWaypoint() ?: return@setOnClickListener
@@ -893,8 +899,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             consecutiveOutsideGateFixes++
             gateStatusText.text = getString(R.string.outside_bruff_message)
-            // Always give the user a way through — GPS may just be wrong.
-            gateOverrideButton.visibility = View.VISIBLE
             currentLocation?.let { location ->
                 val distance = locationService.calculateDistance(
                     location.latitude, location.longitude,
@@ -961,21 +965,11 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton(getString(R.string.settings)) { _, _ ->
                 openAppSettings()
             }
-            .setNegativeButton(getString(R.string.continue_anyway)) { _, _ ->
-                // Without location we can't confirm the user is in the boundary —
-                // bypass the gate directly rather than leaving them stuck on it.
-                // Live navigation can't work, so say so plainly instead of
-                // leaving the bar stuck on "Loading navigation…".
-                locationTrackingUnavailable = true
-                startTour()
-                navigationInstructionText.text =
-                    getString(R.string.navigation_unavailable_no_location)
-                distanceInfoText.text = ""
-                gpsAccuracyText.text = getString(R.string.gps_permission_denied)
-            }
+            .setNegativeButton(getString(R.string.back)) { _, _ -> returnToIntro() }
+            .setCancelable(false)
             .show()
     }
-    
+
     private fun openAppSettings() {
         val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         intent.data = android.net.Uri.fromParts("package", packageName, null)
@@ -1085,10 +1079,6 @@ class MainActivity : AppCompatActivity() {
     
     
     private fun updateNavigationInstructions(location: Location) {
-        // Map-only degraded mode after a denied location permission — the nav bar
-        // shows a fixed explanation set in handleLocationPermissionDenied().
-        if (locationTrackingUnavailable) return
-
         val currentWaypoint = locationService.getCurrentWaypoint()
 
         // At a stop

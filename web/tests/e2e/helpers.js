@@ -25,19 +25,24 @@ export function isFollowing()         { return true; }
 
 /**
  * Inject a fake navigator.geolocation before any scripts run.
- * Exposes window.simulatePosition(lat, lon) for tests to fire GPS fixes.
+ * Exposes window.simulatePosition(lat, lon) for tests to fire GPS fixes and
+ * window.simulateGeoError(code) to fire a geolocation error (1 = permission
+ * denied, 2 = position unavailable, 3 = timeout).
  * Must be called before page.goto().
  */
 export async function injectGeoMock(page) {
   await page.addInitScript(() => {
     let _successCb = null;
+    let _errorCb = null;
     const geoMock = {
-      watchPosition(success) {
+      watchPosition(success, error) {
         _successCb = success;
+        _errorCb = error;
         return 1;
       },
       clearWatch() {
         _successCb = null;
+        _errorCb = null;
       },
     };
     // navigator.geolocation is a non-writable prototype property in Chromium;
@@ -52,6 +57,22 @@ export async function injectGeoMock(page) {
     // before the callback is registered. Poll briefly instead of dropping it,
     // mirroring how a real GPS provider keeps emitting fixes until the app's
     // watcher is ready.
+    window.simulateGeoError = (code = 1) => {
+      const fire = () => _errorCb({ code, message: 'simulated' });
+      if (_errorCb) {
+        fire();
+        return;
+      }
+      const deadline = Date.now() + 5000;
+      const poll = () => {
+        if (_errorCb) {
+          fire();
+        } else if (Date.now() < deadline) {
+          setTimeout(poll, 20);
+        }
+      };
+      poll();
+    };
     window.simulatePosition = (lat, lon, accuracy = 5) => {
       const fire = () => _successCb({ coords: { latitude: lat, longitude: lon, accuracy } });
       if (_successCb) {

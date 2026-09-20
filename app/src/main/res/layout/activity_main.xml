@@ -252,15 +252,6 @@
             android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
             android:textSize="15sp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/gate_override_button"
-            style="@style/Widget.Bruff.Button.TextOnDark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_lg"
-            android:text="@string/gate_start_anyway"
-            android:visibility="gone" />
-
     </LinearLayout>
 
 </RelativeLayout>
