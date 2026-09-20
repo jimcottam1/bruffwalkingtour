@@ -17,4 +17,17 @@ class HelpActivity : AppCompatActivity() {
         finish()
         return true
     }
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_exit, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        if (item.itemId == R.id.action_exit) {
+            ExitHelper.confirmExit(this)
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
 }

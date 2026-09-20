@@ -390,6 +390,8 @@ class MainActivity : AppCompatActivity() {
         gpsAccuracyText = findViewById(R.id.gps_accuracy)
         boundaryGateOverlay = findViewById(R.id.boundary_gate_overlay)
         gateStatusText = findViewById(R.id.gate_status_text)
+        findViewById<View>(R.id.exit_button).setOnClickListener { ExitHelper.confirmExit(this) }
+        findViewById<View>(R.id.gate_exit_button).setOnClickListener { ExitHelper.confirmExit(this) }
         // Debug builds only: long-press the gate message to skip the location
         // check when testing away from Bruff. Release builds have no way past it.
         if (BuildConfig.DEBUG) gateStatusText.setOnLongClickListener { startTour(); true }

@@ -55,6 +55,19 @@ class WaypointDetailActivity : AppCompatActivity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_exit, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        if (item.itemId == R.id.action_exit) {
+            ExitHelper.confirmExit(this)
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     /** "Listen" button — device text-to-speech reads the stop's history aloud. */
     private fun setupNarration() {
         val button = findViewById<MaterialButton>(R.id.narration_button)

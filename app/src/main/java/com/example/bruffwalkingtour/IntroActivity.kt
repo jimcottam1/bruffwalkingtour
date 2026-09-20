@@ -62,6 +62,10 @@ class IntroActivity : AppCompatActivity() {
             startActivity(Intent(this, HelpActivity::class.java))
         }
 
+        findViewById<TextView>(R.id.exit_link).setOnClickListener {
+            ExitHelper.confirmExit(this)
+        }
+
         populateHighlights()
 
         // Set up admin access via long press on the logo

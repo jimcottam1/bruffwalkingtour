@@ -80,6 +80,16 @@ Web: TODO — not yet implemented.)
 
 ---
 
+## Exit
+
+Android has an **Exit** action on every screen (Intro, gate + live map, stop
+detail, Help; the completion screen's "Done" already exits). With no walk in
+progress it closes the app. Part-way round it asks: "Exit and start over" (clears
+saved progress) or "Exit, keep my place" (next launch resumes). Web: a PWA can't
+close itself, so there is no equivalent — "Take Tour Again" restarts.
+
+---
+
 ## Progress persistence  (the part Android was missing)
 
 | Concern | Rule |

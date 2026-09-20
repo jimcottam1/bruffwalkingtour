@@ -22,6 +22,16 @@
         android:text="@string/help_button" />
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/exit_button"
+        style="@style/Widget.Bruff.MapPill"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_toEndOf="@id/help_button"
+        android:text="@string/exit_button" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/recenter_button"
         style="@style/Widget.Bruff.MapPill"
         android:layout_width="wrap_content"
@@ -251,6 +261,14 @@
             android:gravity="center"
             android:textAppearance="@style/TextAppearance.Bruff.NavSecondary"
             android:textSize="15sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/gate_exit_button"
+            style="@style/Widget.Bruff.Button.TextOnDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_lg"
+            android:text="@string/exit_button" />
 
     </LinearLayout>
 

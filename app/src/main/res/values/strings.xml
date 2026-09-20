@@ -7,6 +7,14 @@
     <string name="location_permission_explanation">The walk uses your location to guide you between stops and to know when you\'ve arrived. The walk can\'t start without it.</string>
     <string name="settings">Settings</string>
     <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Exit (available on every screen) -->
+    <string name="exit_button">Exit</string>
+    <string name="exit_title">Exit the walk?</string>
+    <string name="exit_message">You\'re part-way round the trail. Start over next time, or pick up where you left off?</string>
+    <string name="exit_start_over">Exit and start over</string>
+    <string name="exit_keep_place">Exit, keep my place</string>
 
     <!-- Network connectivity -->
     <string name="no_network_connection">No internet connection. Some features may be limited.</string>
