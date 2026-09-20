@@ -112,13 +112,13 @@
     <string name="help_section_getting_started_title">Getting started</string>
     <string name="help_section_getting_started_body">You need to be in Bruff to begin. If you\'re not there yet, the app shows how far away you are and returns to the home screen after a few seconds — just reopen it once you\'ve arrived.</string>
     <string name="help_section_start_title">While you\'re in Bruff</string>
-    <string name="help_section_start_body">Once you\'re in the area, tap Start the walk. The map shows the route to the first stop.</string>
-    <string name="help_section_route_title">Following the route</string>
+    <string name="help_section_start_body">Once you\'re in the area, tap Start the walk. The map shows the four stops and where you are.</string>
+    <string name="help_section_route_title">Finding your way</string>
     <string name="help_section_route_body">• The stops are numbered 1–4 — visit them in order.\n• The bar at the bottom of the screen always shows the direction and distance to your next stop, and \"Stop 2 of 4\" at the top tracks your progress.\n• It\'s a short walk in the town centre — head for the next numbered marker.</string>
     <string name="help_section_arrival_title">Arriving at a stop</string>
     <string name="help_section_arrival_body">When you\'re close enough your phone buzzes, shows a notification, and a card appears with an Explore this stop button. Open it to read the site\'s history, then tap Continue for the next stop. If you walk on without continuing, the app offers to move you along.</string>
     <string name="help_section_map_title">Reading the map</string>
     <string name="help_section_map_body">• Gold marker — the stop you\'re heading to (it flashes)\n• Faded gold marker — stops still ahead\n• Green marker with a check — a stop you\'ve visited</string>
     <string name="help_section_tips_title">Tips</string>
-    <string name="help_section_tips_body">• The screen stays on automatically while you\'re navigating.\n• The GPS badge in the corner shows your location accuracy.\n• If you wander outside Bruff mid-walk, you\'ll get a reminder to head back.</string>
+    <string name="help_section_tips_body">• The screen stays on automatically while you\'re navigating.\n• The GPS line at the bottom of the screen shows your location accuracy.\n• If you wander outside Bruff mid-walk, you\'ll get a reminder to head back.</string>
 </resources>

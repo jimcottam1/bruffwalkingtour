@@ -906,10 +906,10 @@ class MainActivity : AppCompatActivity() {
                     location.latitude, location.longitude,
                     SEAN_WALL_CENTER_LAT, SEAN_WALL_CENTER_LON
                 )
-                val distanceText = if (distance < 1000) {
-                    "${distance.toInt()}m"
-                } else {
-                    "${String.format("%.1f", distance / 1000)}km"
+                val distanceText = when {
+                    distance < 1000 -> "${distance.toInt()}m"
+                    distance < 100_000 -> "${String.format("%.1f", distance / 1000)}km"
+                    else -> "${String.format("%,d", (distance / 1000).toLong())}km"
                 }
                 gateDistanceText.text = getString(R.string.gate_distance_away, distanceText)
             }

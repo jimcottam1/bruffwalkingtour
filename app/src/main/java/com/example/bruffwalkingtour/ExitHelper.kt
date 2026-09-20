@@ -26,8 +26,8 @@ object ExitHelper {
                 progress.clearSavedProgress()
                 activity.finishAffinity()
             }
-            .setNeutralButton(R.string.exit_keep_place) { _, _ -> activity.finishAffinity() }
-            .setNegativeButton(R.string.cancel, null)
+            .setNegativeButton(R.string.exit_keep_place) { _, _ -> activity.finishAffinity() }
+            .setNeutralButton(R.string.cancel, null)
             .show()
     }
 }

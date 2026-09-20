@@ -9,7 +9,9 @@
  */
 
 // v3: route line + routing.js removed from the app shell.
-const CACHE_VERSION = 'v3';
+// v4: placeholder.jpg now exists (its absence made cache.addAll — and so the
+//     whole service-worker install — fail); hard location gate; church icons.
+const CACHE_VERSION = 'v4';
 const APP_CACHE  = `bruff-app-${CACHE_VERSION}`;
 const TILE_CACHE = `bruff-tiles-${CACHE_VERSION}`;
 // Big enough to hold the whole fixed tour area (z15–18 over ~1.5×3 km, a few

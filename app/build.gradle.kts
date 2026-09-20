@@ -25,6 +25,9 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "DEBUG_LOGGING", "false")
+            // No release keystore yet: sign with the debug key so the APK still
+            // installs when sideloaded. Replace with a real key before Play Store.
+            signingConfig = signingConfigs.getByName("debug")
         }
         debug {
             buildConfigField("boolean", "DEBUG_LOGGING", "true")
@@ -54,7 +57,6 @@ dependencies {
     
     // Google Play Services for location
     implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
     
     // Additional dependencies for functionality
     implementation("androidx.activity:activity-ktx:1.9.0")

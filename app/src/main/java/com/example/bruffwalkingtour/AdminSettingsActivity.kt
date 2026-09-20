@@ -1,14 +1,12 @@
 package com.example.bruffwalkingtour
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.view.View
-import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -17,24 +15,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 class AdminSettingsActivity : AppCompatActivity() {
     
-    private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var locationToggle: Switch
-    
-    companion object {
-        const val PREF_LOCATION_ENABLED = "location_enabled"
-        
-        fun isLocationEnabled(context: android.content.Context): Boolean {
-            val prefs = context.getSharedPreferences("bruff_admin_prefs", MODE_PRIVATE)
-            // Ensure location is enabled by default and reset if disabled
-            val isEnabled = prefs.getBoolean(PREF_LOCATION_ENABLED, true)
-            if (!isEnabled) {
-                // Re-enable location services
-                prefs.edit().putBoolean(PREF_LOCATION_ENABLED, true).apply()
-                return true
-            }
-            return isEnabled
-        }
-    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +25,6 @@ class AdminSettingsActivity : AppCompatActivity() {
         
         setContentView(R.layout.activity_admin_settings)
         
-        sharedPreferences = getSharedPreferences("bruff_admin_prefs", MODE_PRIVATE)
         setupViews()
     }
     
@@ -61,18 +40,6 @@ class AdminSettingsActivity : AppCompatActivity() {
     private fun setupViews() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Admin Settings"
-        
-        locationToggle = findViewById(R.id.location_toggle)
-        
-        // Load current location setting
-        val locationEnabled = sharedPreferences.getBoolean(PREF_LOCATION_ENABLED, true)
-        locationToggle.isChecked = locationEnabled
-        
-        // Set up location toggle listener
-        locationToggle.setOnCheckedChangeListener { _, isChecked ->
-            sharedPreferences.edit().putBoolean(PREF_LOCATION_ENABLED, isChecked).apply()
-            LogUtils.d("AdminSettings", "Location services ${if (isChecked) "enabled" else "disabled"}")
-        }
         
         // Set up clickable links
         setupClickableLinks()

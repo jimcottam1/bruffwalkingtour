@@ -27,8 +27,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="@dimen/space_md"
-        android:layout_toEndOf="@id/help_button"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="@dimen/space_md"
         android:text="@string/exit_button" />
 
     <com.google.android.material.button.MaterialButton
@@ -36,9 +36,9 @@
         style="@style/Widget.Bruff.MapPill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/exit_button"
         android:layout_alignParentEnd="true"
-        android:layout_margin="@dimen/space_md"
+        android:layout_marginEnd="@dimen/space_md"
         android:text="@string/recenter_button"
         android:visibility="gone" />
 

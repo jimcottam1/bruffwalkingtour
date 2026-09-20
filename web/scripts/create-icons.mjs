@@ -3,7 +3,9 @@
  * Android launcher icon (app/src/main/res/drawable/ic_launcher_*.xml).
  * Run: node scripts/create-icons.mjs   (needs Playwright's Chromium, which the
  * e2e tests already use)
- * Output: assets/icons/icon-192.png and icon-512.png
+ * Output: assets/icons/icon-192.png and icon-512.png, plus
+ * assets/images/placeholder.jpg (shown when a stop's photo can't load — the
+ * service worker precaches it, so it must exist).
  *
  * If you change the church shape, change it in the Android drawables too.
  */
@@ -40,6 +42,7 @@ const svg = `
 </svg>`;
 
 mkdirSync('assets/icons', { recursive: true });
+mkdirSync('assets/images', { recursive: true });
 const browser = await chromium.launch();
 for (const size of [192, 512]) {
   const page = await browser.newPage({ viewport: { width: size, height: size } });
@@ -50,4 +53,15 @@ for (const size of [192, 512]) {
   console.log(`✓ assets/icons/icon-${size}.png`);
   await page.close();
 }
+
+// Placeholder photo: the church on the ink background, 3:2 like the stop photos.
+const wide = svg
+  .replace('viewBox="0 0 108 108"', 'viewBox="-27 0 162 108"')
+  .replace('<rect width="108" height="108"', '<rect x="-27" width="162" height="108"');
+const photo = await browser.newPage({ viewport: { width: 900, height: 600 } });
+await photo.setContent(
+  `<html><body style="margin:0;background:#160F09">${wide}</body></html>`,
+);
+await photo.screenshot({ path: 'assets/images/placeholder.jpg', type: 'jpeg', quality: 85 });
+console.log('✓ assets/images/placeholder.jpg');
 await browser.close();

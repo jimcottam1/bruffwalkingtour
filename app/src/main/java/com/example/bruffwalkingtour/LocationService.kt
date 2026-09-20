@@ -125,14 +125,6 @@ class LocationService(private val context: Context) {
     
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
-        // Check if location services are enabled by admin
-        if (!AdminSettingsActivity.isLocationEnabled(context)) {
-            LogUtils.d("LocationService", "Location updates disabled by admin - using mock location")
-            // Use mock location data for testing
-            useMockLocation()
-            return
-        }
-        
         // Check if device GPS is enabled
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)
@@ -163,22 +155,6 @@ class LocationService(private val context: Context) {
     fun stopLocationUpdates() {
         LogUtils.d("LocationService", "Stopping location updates")
         fusedLocationClient.removeLocationUpdates(locationCallback)
-    }
-    
-    private fun useMockLocation() {
-        // Use mock location at Sean Wall Monument for testing when location is disabled
-        val mockLocation = android.location.Location("mock").apply {
-            latitude = SEAN_WALL_CENTER_LAT
-            longitude = SEAN_WALL_CENTER_LON
-            accuracy = 10f
-            time = System.currentTimeMillis()
-        }
-        
-        LogUtils.d("LocationService", "Using mock location: $SEAN_WALL_CENTER_LAT, $SEAN_WALL_CENTER_LON")
-        _currentLocation.value = mockLocation
-        checkIfInTourArea(mockLocation)
-        checkProximityToWaypoints(mockLocation)
-        updateDistanceToNextWaypoint(mockLocation)
     }
     
     fun setCurrentTour(tour: WalkingTour) {
